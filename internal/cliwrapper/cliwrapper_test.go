@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
+	"math/rand"
 	"os"
 	"testing"
 )
@@ -27,7 +28,7 @@ func pullModule(python CliWrapper, module string, workDir string, t *testing.T) 
 
 func TestPullImage(t *testing.T) {
 	module := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
-	workDir := "/tmp"
+	workDir := createWorkdir(t)
 	pythonPath := "/usr/bin/python3.9"
 	logger := log.NewTestLogger(t)
 	python := NewCliWrapper(pythonPath, workDir, logger, false)
@@ -37,7 +38,7 @@ func TestPullImage(t *testing.T) {
 
 func TestImageExists(t *testing.T) {
 	module := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
-	workDir := "/tmp"
+	workDir := createWorkdir(t)
 	pythonPath := "/usr/bin/python3.9"
 	logger := log.NewTestLogger(t)
 	python := NewCliWrapper(pythonPath, workDir, logger, false)
@@ -57,7 +58,7 @@ func TestImageFormatValidation(t *testing.T) {
 	moduleGitCommit := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git@8e43b657db73929d6f8ccb893f059bb67658523f"
 	moduleWrongFormat := "https://arcalot.io"
 	wrongFormatMessage := "wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]"
-	workDir := "/tmp"
+	workDir := createWorkdir(t)
 	pythonPath := "/usr/bin/python3.9"
 	logger := log.NewTestLogger(t)
 	wrapperGit := NewCliWrapper(pythonPath, workDir, logger, false)
@@ -79,4 +80,20 @@ func TestImageFormatValidation(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equals(t, err.Error(), wrongFormatMessage)
 
+}
+
+func createWorkdir(t *testing.T) string {
+	workdir := fmt.Sprintf("/tmp/%s", randString(5))
+	err := os.Mkdir(workdir, os.ModePerm)
+	assert.NoError(t, err)
+	return workdir
+}
+
+func randString(n int) string {
+	var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = chars[rand.Intn(len(chars))]
+	}
+	return string(b)
 }
