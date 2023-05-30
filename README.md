@@ -13,7 +13,7 @@ deployer:
   pythonPath: /usr/bin/python3.9
   workdir: /tmp
   modulePullPolicy: Always | IfNotPresent
-  moduleSource: Git | Pypi
+  overrideModuleCompatibility: true | false
 ```
 - `pythonPath` (_optional_, default `/usr/bin/python`)
   - Path to the python interpreter binary 
@@ -26,13 +26,7 @@ deployer:
     At the requested version has been already pulled
   - `Always`: will always pull the module, if already present, will delete the previous
     version and will pull it again.
-- `moduleSource` (_optional_, default `Pypi`)
-  - `Pypi`: the module will be pulled from pypi.org.
-    The plugin name must be in the format `<pypi_module_name>[@<version>]`,
-    if version is omitted the latest version will be pulled
-  - `Git` : the module will be pulled from a Git repository containing a plugin.
-    The plugin name must be in the format `<module_name>@git+<repo_url>[@git_commit_sha]`,
-    if git commit sha is omitted, the HEAD of main will be pulled
+- `overrideModuleCompatibility`: (_optional_, default `false`) if enabled the module compatibility checks will be disabled
 
 ## Worfklows (workflow.yaml)
 The main difference in the workflow syntax is that instead of passing a container image
@@ -40,8 +34,8 @@ as plugin (like the podman, docker and kubernetes deployer) must be passed a pyt
 either in the `Git` or in the `Pypi` format as previously mentioned.
 
 Module Name Format:
-- `Pypi`: `<pypi_module_name>[@<version>]`
-- `Git`: `<module_name>@git+<repo_url>[@git_commit_sha]`
+
+`<module_name>@git+<repo_url>[@git_commit_sha]`
 
 Example `Git` source workflow
 ```
@@ -53,13 +47,13 @@ steps:
     ...
 ```
 
-Example `PyPi` source workflow
-```
-steps:
-  kill_pod:
-    plugin: arcaflow-plugin-kill-pod@0.1.0
-    step: kill-pods
-    input:
-    ....
-```
+## Plugin Compatibility
+
+Considering that some plugins are built on top external binaries that would be difficult to mantain and distribute
+and for that reason are usually distributed as containers we decided to not support all of them.
+To declare a module as compatible with the deployer a file named `.python_deployer_compat` must be placed in the plugin root folder
+and committed to the plugin repository.
+<br/><br/>**Note**: it is possible to bypass the compatibility checks for development setting `overrideModuleCompatibility` to `true`, 
+but keep in mind that engine could behave in an unexpected way or even crash, please be careful!
+
 
