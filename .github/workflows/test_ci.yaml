@@ -40,7 +40,7 @@ jobs:
         run: |
           set -euo pipefail
           go generate
-          go test -coverprofile /tmp/coverage.out -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+          go test -test.parallel=1 -coverprofile /tmp/coverage.out -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
           echo "# Code coverage summary" > /tmp/coverage.md
           echo "|File|Type|Coverage|" >> /tmp/coverage.md
           echo "|----|----|--------|" >> /tmp/coverage.md
