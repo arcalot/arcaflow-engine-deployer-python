@@ -108,6 +108,9 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	}
 
 	// create venv
+	if _, err := os.Stat(p.pythonFullPath); os.IsNotExist(err) {
+		return fmt.Errorf("python interpreter not found in %s", p.pythonFullPath)
+	}
 
 	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", "venv")
 	cmdCreateVenv.Dir = *modulePath

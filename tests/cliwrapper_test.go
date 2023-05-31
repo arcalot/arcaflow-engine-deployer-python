@@ -1,52 +1,43 @@
-package cliwrapper
+package tests
 
 import (
 	"fmt"
+	"github.com/tsebastiani/arcaflow-engine-deployer-python/internal/cliwrapper"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
-	"math/rand"
-	"os"
+	"os/exec"
 	"testing"
 )
-
-func removeModuleIfExists(module string, python CliWrapper, t *testing.T) {
-	modulePath, err := python.GetModulePath(module)
-	assert.Nil(t, err)
-	if _, err := os.Stat(*modulePath); !os.IsNotExist(err) {
-		os.RemoveAll(*modulePath)
-	}
-}
-
-func pullModule(python CliWrapper, module string, workDir string, t *testing.T) error {
-	removeModuleIfExists(module, python, t)
-	err := python.PullModule(module)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 func TestPullImage(t *testing.T) {
 	module := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
 	workDir := createWorkdir(t)
-	pythonPath := "/usr/bin/python3.9"
+	pythonPath, err := exec.LookPath("python")
+	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	python := NewCliWrapper(pythonPath, workDir, logger, false)
-	err := pullModule(python, module, workDir, t)
+	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger, false)
+	err = pullModule(python, module, workDir, t)
+	if err != nil {
+		logger.Errorf(err.Error())
+	}
 	assert.NoError(t, err)
 }
 
 func TestImageExists(t *testing.T) {
 	module := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
 	workDir := createWorkdir(t)
-	pythonPath := "/usr/bin/python3.9"
+	pythonPath, err := exec.LookPath("python")
+	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	python := NewCliWrapper(pythonPath, workDir, logger, false)
+	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger, false)
 	removeModuleIfExists(module, python, t)
 	exists, err := python.ModuleExists(module)
 	assert.Nil(t, err)
 	assert.Equals(t, *exists, false)
 	err = pullModule(python, module, workDir, t)
+	if err != nil {
+		logger.Errorf(err.Error())
+	}
 	assert.NoError(t, err)
 	exists, err = python.ModuleExists(module)
 	assert.NoError(t, err)
@@ -59,9 +50,10 @@ func TestImageFormatValidation(t *testing.T) {
 	moduleWrongFormat := "https://arcalot.io"
 	wrongFormatMessage := "wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]"
 	workDir := createWorkdir(t)
-	pythonPath := "/usr/bin/python3.9"
+	pythonPath, err := exec.LookPath("python")
+	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	wrapperGit := NewCliWrapper(pythonPath, workDir, logger, false)
+	wrapperGit := cliwrapper.NewCliWrapper(pythonPath, workDir, logger, false)
 
 	// happy path
 	path, err := wrapperGit.GetModulePath(moduleGitCommit)
@@ -80,20 +72,4 @@ func TestImageFormatValidation(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equals(t, err.Error(), wrongFormatMessage)
 
-}
-
-func createWorkdir(t *testing.T) string {
-	workdir := fmt.Sprintf("/tmp/%s", randString(5))
-	err := os.Mkdir(workdir, os.ModePerm)
-	assert.NoError(t, err)
-	return workdir
-}
-
-func randString(n int) string {
-	var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = chars[rand.Intn(len(chars))]
-	}
-	return string(b)
 }
