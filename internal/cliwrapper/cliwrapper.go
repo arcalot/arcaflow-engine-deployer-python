@@ -29,7 +29,6 @@ const RunnableClassifier string = "Arcaflow :: Python Deployer :: Runnable"
 func NewCliWrapper(pythonFullPath string,
 	workDir string,
 	logger log.Logger,
-	overrideCompatibilityCheck bool,
 ) CliWrapper {
 	return &cliWrapper{
 		pythonFullPath:             pythonFullPath,

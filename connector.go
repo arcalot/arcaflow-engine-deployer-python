@@ -66,11 +66,11 @@ func (c *Connector) pullModule(_ context.Context, fullModuleName string) error {
 	// ModulePullPolicyIfNotPresent or per every run if the policy is ModulePullPolicyAlways
 	c.logger.Debugf("checking module compatibility: %s", fullModuleName)
 	err = c.pythonCliWrapper.CheckModuleCompatibility(fullModuleName)
-	if err != nil && c.config.OverrideModuleCompatibility == false {
+	if err != nil && !c.config.OverrideModuleCompatibility {
 		return err
 	}
 
-	if err != nil && c.config.OverrideModuleCompatibility == true {
+	if err != nil && !c.config.OverrideModuleCompatibility {
 		c.logger.Warningf("you're running an incompatible module overriding compatibility checks," +
 			"this action may lead to engine crashes, be careful")
 	}

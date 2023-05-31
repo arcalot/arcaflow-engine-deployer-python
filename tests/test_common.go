@@ -55,7 +55,7 @@ func getCliWrapper(t *testing.T, overrideCompatibilityCheck bool, workdir string
 	workDir := workdir
 	pythonPath := "/usr/bin/python3.9"
 	logger := log.NewTestLogger(t)
-	return wrapper.NewCliWrapper(pythonPath, workDir, logger, overrideCompatibilityCheck)
+	return wrapper.NewCliWrapper(pythonPath, workDir, logger)
 }
 
 func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *config.Config) {

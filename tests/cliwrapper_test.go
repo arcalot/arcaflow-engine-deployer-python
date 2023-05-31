@@ -15,7 +15,7 @@ func TestPullImage(t *testing.T) {
 	pythonPath, err := exec.LookPath("python")
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger, false)
+	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger)
 	err = pullModule(python, module, workDir, t)
 	if err != nil {
 		logger.Errorf(err.Error())
@@ -29,7 +29,7 @@ func TestImageExists(t *testing.T) {
 	pythonPath, err := exec.LookPath("python")
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger, false)
+	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger)
 	removeModuleIfExists(module, python, t)
 	exists, err := python.ModuleExists(module)
 	assert.Nil(t, err)
@@ -53,7 +53,7 @@ func TestImageFormatValidation(t *testing.T) {
 	pythonPath, err := exec.LookPath("python")
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	wrapperGit := cliwrapper.NewCliWrapper(pythonPath, workDir, logger, false)
+	wrapperGit := cliwrapper.NewCliWrapper(pythonPath, workDir, logger)
 
 	// happy path
 	path, err := wrapperGit.GetModulePath(moduleGitCommit)
