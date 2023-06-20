@@ -10,5 +10,4 @@ type CliWrapper interface {
 	Deploy(fullModuleName string) (io.WriteCloser, io.ReadCloser, error)
 	KillAndClean() error
 	GetModulePath(fullModuleName string) (*string, error)
-	CheckModuleCompatibility(fullModuleName string) error
 }

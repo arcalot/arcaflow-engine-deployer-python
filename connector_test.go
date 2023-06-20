@@ -66,6 +66,14 @@ var inOutConfigGitPullIfNotPresent = `
 {
 	"pythonPath":"/usr/bin/python3.9",
 	"workdir":"/tmp",
+	"modulePullPolicy":"IfNotPresent"
+}
+`
+
+var inOutConfigGitOverrideCheks = `
+{
+	"pythonPath":"/usr/bin/python3.9",
+	"workdir":"/tmp",
 	"modulePullPolicy":"IfNotPresent",
 	"overrideModuleCompatibility":"true"
 }
@@ -76,14 +84,13 @@ func TestRunIncompatiblePlugin(t *testing.T) {
 	connector, _ := getConnector(t, inOutConfigGitPullAlwaysNoOverride)
 	_, _, err := RunStep(t, connector, moduleName)
 	assert.Error(t, err)
-	assert.Equals(t, err.Error(), "impossible to run module arcaflow-plugin-template-python, from repo https://github.com/arcalot/arcaflow-plugin-template-python.git marked as incompatible in package metadata")
+	assert.Equals(t, err.Error(), "impossible to run module arcaflow_plugin_template_python, marked as incompatible in package metadata")
 }
 
 func TestRunIncompatiblePluginOverride(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
 	connector, _ := getConnector(t, inOutConfigGitOverrideCheks)
 	outputID, outputData, err := RunStep(t, connector, moduleName)
-	assert.NoError(t, err)
 	assert.Equals(t, *outputID, "success")
 	assert.NoError(t, err)
 	assert.Equals(t,
@@ -95,7 +102,6 @@ func TestRunStepGit(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git@6145c2cd0760495ea6dc5b7399b6d7692e81d368"
 	connector, _ := getConnector(t, inOutConfigGitPullAlways)
 	outputID, outputData, err := RunStep(t, connector, moduleName)
-	assert.NoError(t, err)
 	assert.Equals(t, *outputID, "success")
 	assert.NoError(t, err)
 	assert.Equals(t,

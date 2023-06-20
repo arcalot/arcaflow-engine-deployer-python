@@ -18,14 +18,14 @@ import (
 )
 
 type cliWrapper struct {
-	pythonFullPath string
-	workDir        string
-	deployCommand  *exec.Cmd
-	logger         log.Logger
+	pythonFullPath             string
+	workDir                    string
+	overrideCompatibilityCheck bool
+	deployCommand              *exec.Cmd
+	logger                     log.Logger
 }
 
 const RunnableClassifier string = "Arcaflow :: Python Deployer :: Runnable"
-const FileFlag string = ".python_deployer_compat"
 
 func NewCliWrapper(pythonFullPath string,
 	workDir string,
@@ -33,9 +33,10 @@ func NewCliWrapper(pythonFullPath string,
 	overrideCompatibilityCheck bool,
 ) CliWrapper {
 	return &cliWrapper{
-		pythonFullPath: pythonFullPath,
-		logger:         logger,
-		workDir:        workDir,
+		pythonFullPath:             pythonFullPath,
+		logger:                     logger,
+		workDir:                    workDir,
+		overrideCompatibilityCheck: overrideCompatibilityCheck,
 	}
 }
 
@@ -143,6 +144,10 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	}
 	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
 
+	if err := p.CheckModuleCompatibility(venvPython, moduleInvokableName); err != nil {
+		return nil, nil, err
+	}
+
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
 	var stdErrBuff bytes.Buffer
 	p.deployCommand.Stderr = &stdErrBuff
@@ -202,7 +207,7 @@ func (p *cliWrapper) CheckModuleCompatibility(fullModuleName string) error {
 		if module.ModuleVersion != nil {
 			return fmt.Errorf("impossible to run module %s, from repo %s@%s marked as incompatible in package metadata", *module.ModuleName, *module.Repo, *module.ModuleVersion)
 		} else {
-			return fmt.Errorf("impossible to run module %s, from repo %s marked as incompatible in package metadata", *module.ModuleName, *module.Repo)
+			return fmt.Errorf("impossible to run module %s, marked as incompatible in package metadata", moduleName)
 		}
 	}
 	return nil
