@@ -51,8 +51,8 @@ func pullModule(python wrapper.CliWrapper, module string, workDir string, t *tes
 	return nil
 }
 
-func getCliWrapper(t *testing.T, overrideCompatibilityCheck bool, workdir string) wrapper.CliWrapper {
-	workDir := workdir
+func getCliWrapper(t *testing.T, workdir string) wrapper.CliWrapper {
+        workDir := workdir
 	pythonPath := "/usr/bin/python3.9"
 	logger := log.NewTestLogger(t)
 	return wrapper.NewCliWrapper(pythonPath, workDir, logger)

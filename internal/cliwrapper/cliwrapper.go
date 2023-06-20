@@ -4,10 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/storage/memory"
 	"github.com/arcalot/arcaflow-engine-deployer-python/internal/models"
 	"go.arcalot.io/log/v2"
 	"io"
@@ -34,7 +30,6 @@ func NewCliWrapper(pythonFullPath string,
 		pythonFullPath:             pythonFullPath,
 		logger:                     logger,
 		workDir:                    workDir,
-		overrideCompatibilityCheck: overrideCompatibilityCheck,
 	}
 }
 

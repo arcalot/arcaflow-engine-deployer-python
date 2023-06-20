@@ -17,7 +17,6 @@ deployer:
   pythonPath: /usr/bin/python3.9
   workdir: /tmp
   modulePullPolicy: Always | IfNotPresent
-  overrideModuleCompatibility: true | false
 ```
 - `pythonPath` (_optional_, default `/usr/bin/python`)
   - Path to the python interpreter binary 
@@ -30,7 +29,6 @@ deployer:
     At the requested version has been already pulled
   - `Always`: will always pull the module, if already present, will delete the previous
     version and will pull it again.
-- `overrideModuleCompatibility`: (_optional_, default `false`) if enabled the module compatibility checks will be disabled
 
 ## Worfklows (workflow.yaml)
 The main difference in the workflow syntax is that instead of passing a container image
@@ -50,14 +48,3 @@ steps:
     input:
     ...
 ```
-
-## Plugin Compatibility
-
-Considering that some plugins are built on top external binaries that would be difficult to mantain and distribute
-and for that reason are usually distributed as containers we decided to not support all of them.
-To declare a module as compatible with the deployer a file named `.python_deployer_compat` must be placed in the plugin root folder
-and committed to the plugin repository.
-<br/><br/>**Note**: it is possible to bypass the compatibility checks for development setting `overrideModuleCompatibility` to `true`, 
-but keep in mind that engine could behave in an unexpected way or even crash, please be careful!
-
-

@@ -12,25 +12,10 @@ import (
 
 const templatePluginInput string = "Tester McTesty"
 
-var inOutConfigGitPullAlwaysNoOverride = `
-{
-	"workdir":"/tmp",
-	"modulePullPolicy":"Always"
-}
-`
-var inOutConfigGitOverrideCheks = `
-{
-	"workdir":"/tmp",
-	"modulePullPolicy":"IfNotPresent",
-	"overrideModuleCompatibility":"true"
-}
-`
-
 var inOutConfigGitPullAlways = `
 {
 	"workdir":"/tmp",
-	"modulePullPolicy":"Always",
-	"overrideModuleCompatibility":"true"
+	"modulePullPolicy":"Always"
 }
 `
 
@@ -40,34 +25,6 @@ var inOutConfigGitPullIfNotPresent = `
 	"modulePullPolicy":"IfNotPresent"
 }
 `
-
-var inOutConfigGitOverrideCheks = `
-{
-	"pythonPath":"/usr/bin/python3.9",
-	"workdir":"/tmp",
-	"modulePullPolicy":"IfNotPresent",
-	"overrideModuleCompatibility":"true"
-}
-`
-
-func TestRunIncompatiblePlugin(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
-	connector, _ := getConnector(t, inOutConfigGitPullAlwaysNoOverride, nil)
-	_, _, err := RunStep(t, connector, moduleName)
-	assert.Error(t, err)
-	assert.Equals(t, err.Error(), "impossible to run module arcaflow_plugin_template_python, marked as incompatible in package metadata")
-}
-
-func TestRunIncompatiblePluginOverride(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
-	connector, _ := getConnector(t, inOutConfigGitOverrideCheks, nil)
-	outputID, outputData, err := RunStep(t, connector, moduleName)
-	assert.Equals(t, *outputID, "success")
-	assert.NoError(t, err)
-	assert.Equals(t,
-		outputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
-}
 
 func TestRunStepGit(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@6145c2cd0760495ea6dc5b7399b6d7692e81d368"
@@ -104,7 +61,7 @@ func TestPullPolicies(t *testing.T) {
 	assert.Equals(t,
 		outputData.(map[interface{}]interface{}),
 		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
-	wrapper := getCliWrapper(t, false, workdir)
+	wrapper := getCliWrapper(t, workdir)
 	path, err := wrapper.GetModulePath(moduleName)
 	assert.NoError(t, err)
 	file, err := os.Stat(*path)
