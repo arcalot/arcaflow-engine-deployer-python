@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"github.com/tsebastiani/arcaflow-engine-deployer-python/internal/cliwrapper"
+	"github.com/arcalot/arcaflow-engine-deployer-python/internal/cliwrapper"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"os/exec"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestPullImage(t *testing.T) {
-	module := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
+	module := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
 	workDir := createWorkdir(t)
 	pythonPath, err := exec.LookPath("python")
 	assert.NoError(t, err)
@@ -24,7 +24,7 @@ func TestPullImage(t *testing.T) {
 }
 
 func TestImageExists(t *testing.T) {
-	module := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
+	module := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
 	workDir := createWorkdir(t)
 	pythonPath, err := exec.LookPath("python")
 	assert.NoError(t, err)
@@ -45,8 +45,8 @@ func TestImageExists(t *testing.T) {
 }
 
 func TestImageFormatValidation(t *testing.T) {
-	moduleGitNoCommit := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git"
-	moduleGitCommit := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git@8e43b657db73929d6f8ccb893f059bb67658523f"
+	moduleGitNoCommit := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	moduleGitCommit := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@8e43b657db73929d6f8ccb893f059bb67658523f"
 	moduleWrongFormat := "https://arcalot.io"
 	wrongFormatMessage := "wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]"
 	workDir := createWorkdir(t)

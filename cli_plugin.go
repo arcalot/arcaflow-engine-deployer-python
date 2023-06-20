@@ -1,8 +1,8 @@
 package pythondeployer
 
 import (
-	"github.com/tsebastiani/arcaflow-engine-deployer-python/internal/cliwrapper"
-	"github.com/tsebastiani/arcaflow-engine-deployer-python/internal/config"
+	"github.com/arcalot/arcaflow-engine-deployer-python/internal/cliwrapper"
+	"github.com/arcalot/arcaflow-engine-deployer-python/internal/config"
 	"go.arcalot.io/log/v2"
 	"io"
 )

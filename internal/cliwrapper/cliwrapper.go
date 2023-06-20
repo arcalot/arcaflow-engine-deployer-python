@@ -8,7 +8,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/go-git/go-git/v5/storage/memory"
-	"github.com/tsebastiani/arcaflow-engine-deployer-python/internal/models"
+	"github.com/arcalot/arcaflow-engine-deployer-python/internal/models"
 	"go.arcalot.io/log/v2"
 	"io"
 	"os"

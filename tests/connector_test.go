@@ -70,7 +70,7 @@ func TestRunIncompatiblePluginOverride(t *testing.T) {
 }
 
 func TestRunStepGit(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/tsebastiani/arcaflow-plugin-template-python.git@6145c2cd0760495ea6dc5b7399b6d7692e81d368"
+	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@6145c2cd0760495ea6dc5b7399b6d7692e81d368"
 	connector, _ := getConnector(t, inOutConfigGitPullAlways, nil)
 	outputID, outputData, err := RunStep(t, connector, moduleName)
 	assert.Equals(t, *outputID, "success")
