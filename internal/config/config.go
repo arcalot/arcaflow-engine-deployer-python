@@ -4,7 +4,6 @@ type Config struct {
 	PythonPath                  string           `json:"pythonPath"`
 	WorkDir                     string           `json:"workdir"`
 	ModulePullPolicy            ModulePullPolicy `json:"modulePullPolicy"`
-	OverrideModuleCompatibility bool             `json:"overrideModuleCompatibility"`
 }
 
 type ModulePullPolicy string

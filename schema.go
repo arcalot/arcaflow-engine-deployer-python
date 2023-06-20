@@ -56,17 +56,6 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				schema.PointerTo(util.JSONEncode(string(config.ModulePullPolicyIfNotPresent))),
 				nil,
 			),
-
-			"overrideModuleCompatibility": schema.NewPropertySchema(
-				schema.NewBoolSchema(),
-				schema.NewDisplayValue(schema.PointerTo("Module Compatibility"), schema.PointerTo("Overrides the module compatibility check"), nil),
-				false,
-				nil,
-				nil,
-				nil,
-				schema.PointerTo("false"),
-				nil,
-			),
 		},
 	),
 )

@@ -20,7 +20,6 @@ import (
 type cliWrapper struct {
 	pythonFullPath             string
 	workDir                    string
-	overrideCompatibilityCheck bool
 	deployCommand              *exec.Cmd
 	logger                     log.Logger
 }
@@ -144,10 +143,6 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	}
 	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
 
-	if err := p.CheckModuleCompatibility(venvPython, moduleInvokableName); err != nil {
-		return nil, nil, err
-	}
-
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
 	var stdErrBuff bytes.Buffer
 	p.deployCommand.Stderr = &stdErrBuff
@@ -161,56 +156,9 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	}
 
 	if err := p.deployCommand.Start(); err != nil {
-		return nil, nil, fmt.Errorf(stdErrBuff.String())
+		return nil, nil, errors.New(stdErrBuff.String())
 	}
 	return stdin, stdout, nil
-}
-
-func (p *cliWrapper) CheckModuleCompatibility(fullModuleName string) error {
-	module, err := parseModuleName(fullModuleName)
-	repo, err := git.Clone(memory.NewStorage(), nil, &git.CloneOptions{
-		URL: *module.Repo,
-	})
-	if err != nil {
-		return err
-	}
-	var commit *object.Commit
-	if module.ModuleVersion != nil {
-		commit, err = repo.CommitObject(plumbing.NewHash(*module.ModuleVersion))
-		if err != nil {
-			return err
-		}
-	} else {
-		head, err := repo.Head()
-		if err != nil {
-			return err
-		}
-		commit, err = repo.CommitObject(head.Hash())
-		if err != nil {
-			return err
-		}
-	}
-	tree, err := commit.Tree()
-	if err != nil {
-		return err
-	}
-	var isCompatible bool = false
-
-	tree.Files().ForEach(func(f *object.File) error {
-		if f.Name == FileFlag {
-			isCompatible = true
-		}
-		return nil
-	})
-
-	if isCompatible == false {
-		if module.ModuleVersion != nil {
-			return fmt.Errorf("impossible to run module %s, from repo %s@%s marked as incompatible in package metadata", *module.ModuleName, *module.Repo, *module.ModuleVersion)
-		} else {
-			return fmt.Errorf("impossible to run module %s, marked as incompatible in package metadata", moduleName)
-		}
-	}
-	return nil
 }
 
 func (p *cliWrapper) KillAndClean() error {
