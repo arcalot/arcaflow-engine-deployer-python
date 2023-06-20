@@ -43,3 +43,7 @@ func (p *CliPlugin) Close() error {
 	}
 	return nil
 }
+
+func (p *CliPlugin) ID() string {
+	return p.containerImage
+}
