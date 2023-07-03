@@ -1,4 +1,4 @@
-module go.flow.arcalot.io/deployer
+module go.flow.arcalot.io/pythondeployer
 
 go 1.18
 
@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	go.flow.arcalot.io/pythondeployer v0.1.0
 	go.arcalot.io/log/v2 v2.0.0
+	go.flow.arcalot.io/deployer v0.2.0
 	go.flow.arcalot.io/pluginsdk v0.1.3
 )
