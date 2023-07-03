@@ -1,3 +1,5 @@
+github.com/arcalot/arcaflow-engine-deployer-python v0.1.0 h1:pDMDiozsBB0GFxdp5gsv77F5ta7GJI3/pBZF4BqxaMM=
+github.com/arcalot/arcaflow-engine-deployer-python v0.1.0/go.mod h1:3APHszyDh2xCHfnOUM4ZV5VpH68U0ic0WZN9K1vHwe4=
 github.com/fxamacker/cbor/v2 v2.4.0 h1:ri0ArlOR+5XunOP8CRUowT0pSJOwhW098ZCUyskZD88=
 github.com/fxamacker/cbor/v2 v2.4.0/go.mod h1:TA1xS00nchWmaBnEIxPSE5oHLuJBAVvqrtAnWBwBCVo=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
@@ -8,8 +10,6 @@ go.arcalot.io/lang v1.0.0 h1:mgDaieT4wWdZTnR4V7+/pgYRmzfU7VZZgIzHccuxAbY=
 go.arcalot.io/lang v1.0.0/go.mod h1:ALqfYEhAzC2WoGLaycmJoNJd5NmkR7V1PSKp/c5D278=
 go.arcalot.io/log/v2 v2.0.0 h1:mbmsWDVBXZNWrDzUh5JLzeGCQ59kTuMFs+pyfJGc1hk=
 go.arcalot.io/log/v2 v2.0.0/go.mod h1:1V8jnFIIGwh2CtcGkHNOmy1nCo7LbazQNkUcnKYNMn4=
-go.flow.arcalot.io/deployer v0.1.0 h1:5lcCN6rQD2dp2hkaW6dInaBoyKzWt8/kzJnDjeRAoLo=
-go.flow.arcalot.io/deployer v0.1.0/go.mod h1:xVSB+svHVPmX6yTZIU0K4U/pDbs+rezsWa69vYA+E6k=
 go.flow.arcalot.io/pluginsdk v0.1.3 h1:o6v1YJmirRNcflh9ZQr5bMuhBavk8CzARjrNodU/XHA=
 go.flow.arcalot.io/pluginsdk v0.1.3/go.mod h1:ceY4HhUbnhZyQa3C7lXu25TNVCbsWGuYZapsV5RuIrk=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
