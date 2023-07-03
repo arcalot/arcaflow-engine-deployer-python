@@ -2,7 +2,7 @@ package tests
 
 import (
 	"fmt"
-	"github.com/arcalot/arcaflow-engine-deployer-python/internal/cliwrapper"
+	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"os/exec"

@@ -3,9 +3,9 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	pythondeployer "github.com/arcalot/arcaflow-engine-deployer-python"
-	wrapper "github.com/arcalot/arcaflow-engine-deployer-python/internal/cliwrapper"
-	"github.com/arcalot/arcaflow-engine-deployer-python/internal/config"
+	pythondeployer "go.flow.arcalot.io/pythondeployer"
+	wrapper "go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"

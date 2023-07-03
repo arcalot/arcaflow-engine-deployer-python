@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	github.com/arcalot/arcaflow-engine-deployer-python v0.1.0
+	go.flow.arcalot.io/pythondeployer v0.1.0
 	go.arcalot.io/log/v2 v2.0.0
 	go.flow.arcalot.io/pluginsdk v0.1.3
 )

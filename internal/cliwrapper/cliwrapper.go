@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"github.com/arcalot/arcaflow-engine-deployer-python/internal/models"
+	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"go.arcalot.io/log/v2"
 	"io"
 	"os"
