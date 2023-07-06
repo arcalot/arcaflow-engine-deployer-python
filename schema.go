@@ -1,20 +1,12 @@
 package pythondeployer
 
 import (
+	"regexp"
+
+	"go.flow.arcalot.io/pluginsdk/schema"
 	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"go.flow.arcalot.io/pythondeployer/internal/util"
-	"go.flow.arcalot.io/pluginsdk/schema"
-	"os/exec"
-	"regexp"
 )
-
-func pythonGetDefaultPath() string {
-	path, err := exec.LookPath("python")
-	if err != nil {
-		panic("python binary not found in $PATH, please provide it in configuration")
-	}
-	return path
-}
 
 // Schema describes the deployment options of the Docker deployment mechanism.
 var Schema = schema.NewTypedScopeSchema[*config.Config](
@@ -29,7 +21,7 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				nil,
 				nil,
 				nil,
-				schema.PointerTo(util.JSONEncode(pythonGetDefaultPath())),
+				nil,
 				nil,
 			),
 			"workdir": schema.NewPropertySchema(
