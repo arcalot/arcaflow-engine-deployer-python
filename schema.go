@@ -21,7 +21,7 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				nil,
 				nil,
 				nil,
-				nil,
+				schema.PointerTo(util.JSONEncode("python")),
 				nil,
 			),
 			"workdir": schema.NewPropertySchema(
