@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"go.arcalot.io/log/v2"
+	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"io"
 	"os"
 	"os/exec"
@@ -14,10 +14,11 @@ import (
 )
 
 type cliWrapper struct {
-	pythonFullPath             string
-	workDir                    string
-	deployCommand              *exec.Cmd
-	logger                     log.Logger
+	pythonFullPath string
+	workDir        string
+	deployCommand  *exec.Cmd
+	logger         log.Logger
+	stdErrBuff     bytes.Buffer
 }
 
 const RunnableClassifier string = "Arcaflow :: Python Deployer :: Runnable"
@@ -27,9 +28,9 @@ func NewCliWrapper(pythonFullPath string,
 	logger log.Logger,
 ) CliWrapper {
 	return &cliWrapper{
-		pythonFullPath:             pythonFullPath,
-		logger:                     logger,
-		workDir:                    workDir,
+		pythonFullPath: pythonFullPath,
+		logger:         logger,
+		workDir:        workDir,
 	}
 }
 
@@ -76,6 +77,7 @@ func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
 	}
 
 	if _, err := os.Stat(*modulePath); os.IsNotExist(err) {
+		// false
 		return &moduleExists, nil
 	}
 
@@ -111,7 +113,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	var cmdCreateOut bytes.Buffer
 	cmdCreateVenv.Stderr = &cmdCreateOut
 	if err := cmdCreateVenv.Run(); err != nil {
-		return errors.New(cmdCreateOut.String())
+		return fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
 	}
 
 	// pull module
@@ -120,7 +122,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	var cmdPipOut bytes.Buffer
 	cmdPip.Stderr = &cmdPipOut
 	if err := cmdPip.Run(); err != nil {
-		return errors.New(cmdPipOut.String())
+		return fmt.Errorf("error while running pip. stderr: '%s', err: '%s'", cmdPipOut.String(), err)
 	}
 	return nil
 }
@@ -141,8 +143,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
-	var stdErrBuff bytes.Buffer
-	p.deployCommand.Stderr = &stdErrBuff
+	p.deployCommand.Stderr = &p.stdErrBuff
 	stdin, err := p.deployCommand.StdinPipe()
 	if err != nil {
 		return nil, nil, err
@@ -153,12 +154,17 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	}
 
 	if err := p.deployCommand.Start(); err != nil {
-		return nil, nil, errors.New(stdErrBuff.String())
+		return nil, nil, fmt.Errorf("error while attempting to run python stderr: '%s', err: '%s'", p.stdErrBuff.String(), err.Error())
 	}
 	return stdin, stdout, nil
 }
 
 func (p *cliWrapper) KillAndClean() error {
+	if p.stdErrBuff.Len() > 0 {
+		p.logger.Errorf("stderr present after plugin execution: %s", p.stdErrBuff.String())
+	} else {
+		p.logger.Infof("stderr empty")
+	}
 	p.logger.Infof("killing config process with pid %d", p.deployCommand.Process.Pid)
 	err := p.deployCommand.Process.Kill()
 	if err != nil {
