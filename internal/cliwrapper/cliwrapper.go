@@ -161,7 +161,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 
 func (p *cliWrapper) KillAndClean() error {
 	if p.stdErrBuff.Len() > 0 {
-		p.logger.Errorf("stderr present after plugin execution: %s", p.stdErrBuff.String())
+		p.logger.Errorf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
 	} else {
 		p.logger.Infof("stderr empty")
 	}

@@ -6,6 +6,7 @@ import (
 	"go.arcalot.io/assert"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/atp"
+	"go.flow.arcalot.io/pluginsdk/schema"
 	"os"
 	"testing"
 )
@@ -87,8 +88,6 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (*st
 	stepID := "hello-world"
 	input := map[string]any{"name": templatePluginInput}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	plugin, err := connector.Deploy(context.Background(), moduleName)
 
 	if err != nil {
@@ -112,7 +111,13 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (*st
 	assert.NoError(t, err)
 
 	// Executes the step and validates that the output is correct.
-	outputID, outputData, err := atpClient.Execute(ctx, stepID, input)
+	receivedSignals := make(chan schema.Input)
+	emittedSignals := make(chan schema.Input)
+	outputID, outputData, err := atpClient.Execute(
+		schema.Input{ID: stepID, InputData: input},
+		receivedSignals,
+		emittedSignals,
+	)
 	return &outputID, outputData, err
 
 }

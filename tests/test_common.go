@@ -3,16 +3,29 @@ package tests
 import (
 	"encoding/json"
 	"fmt"
-	pythondeployer "go.flow.arcalot.io/pythondeployer"
-	wrapper "go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
+	pythondeployer "go.flow.arcalot.io/pythondeployer"
+	wrapper "go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"math/rand"
 	"os"
+	"os/exec"
 	"testing"
 )
+
+func getPythonPath() (string, error) {
+	python3Path, errPython3 := exec.LookPath("python3")
+	if errPython3 != nil {
+		pythonPath, errPython := exec.LookPath("python")
+		if errPython != nil {
+			return "", fmt.Errorf("error getting Python3 (%s) and python (%s)", errPython3, errPython)
+		}
+		return pythonPath, nil
+	}
+	return python3Path, nil
+}
 
 func createWorkdir(t *testing.T) string {
 	workdir := fmt.Sprintf("/tmp/%s", randString(10))
@@ -52,7 +65,7 @@ func pullModule(python wrapper.CliWrapper, module string, workDir string, t *tes
 }
 
 func getCliWrapper(t *testing.T, workdir string) wrapper.CliWrapper {
-        workDir := workdir
+	workDir := workdir
 	pythonPath := "/usr/bin/python3.9"
 	logger := log.NewTestLogger(t)
 	return wrapper.NewCliWrapper(pythonPath, workDir, logger)
@@ -67,6 +80,9 @@ func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 	schema := factory.ConfigurationSchema()
 	unserializedConfig, err := schema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
+	pythonPath, err := getPythonPath()
+	assert.NoError(t, err)
+	unserializedConfig.PythonPath = pythonPath
 	// NOTE: randomizing Workdir to avoid parallel tests to
 	// remove python folders while other tests are running
 	// causing the test to fail

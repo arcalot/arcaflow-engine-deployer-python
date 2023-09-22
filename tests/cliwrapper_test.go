@@ -2,17 +2,17 @@ package tests
 
 import (
 	"fmt"
-	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
-	"os/exec"
+	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"testing"
 )
 
 func TestPullImage(t *testing.T) {
 	module := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
 	workDir := createWorkdir(t)
-	pythonPath, err := exec.LookPath("python")
+
+	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
 	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger)
@@ -26,7 +26,7 @@ func TestPullImage(t *testing.T) {
 func TestImageExists(t *testing.T) {
 	module := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
 	workDir := createWorkdir(t)
-	pythonPath, err := exec.LookPath("python")
+	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
 	python := cliwrapper.NewCliWrapper(pythonPath, workDir, logger)
@@ -50,7 +50,7 @@ func TestImageFormatValidation(t *testing.T) {
 	moduleWrongFormat := "https://arcalot.io"
 	wrongFormatMessage := "wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]"
 	workDir := createWorkdir(t)
-	pythonPath, err := exec.LookPath("python")
+	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
 	wrapperGit := cliwrapper.NewCliWrapper(pythonPath, workDir, logger)
