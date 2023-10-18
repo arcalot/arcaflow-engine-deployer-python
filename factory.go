@@ -25,6 +25,10 @@ func (f factory) ID() string {
 	return "python"
 }
 
+func (f factory) DeploymentType() deployer.DeploymentType {
+	return "python"
+}
+
 func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] {
 	return Schema
 }
