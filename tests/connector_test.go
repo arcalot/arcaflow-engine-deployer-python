@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-const templatePluginInput string = "Tester McTesty"
+const examplePluginInput string = "Tester McTesty"
 
 var inOutConfigGitPullAlways = `
 {
@@ -28,18 +28,18 @@ var inOutConfigGitPullIfNotPresent = `
 `
 
 func TestRunStepGit(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	connector, _ := getConnector(t, inOutConfigGitPullAlways, nil)
 	OutputID, OutputData, Error := RunStep(t, connector, moduleName)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
 }
 
 func TestPullPolicies(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	// this test must be run in the same workdir so it's created upfront
 	// and passed to the getConnector func
 	workdir := createWorkdir(t)
@@ -51,14 +51,14 @@ func TestPullPolicies(t *testing.T) {
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
 	// pull mode IfNotPresent, venv will be kept
 	OutputID, OutputData, Error = RunStep(t, connectorIfNotPresent, moduleName)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
 	wrapper := getCliWrapper(t, workdir)
 	path, err := wrapper.GetModulePath(moduleName)
 	assert.NoError(t, err)
@@ -72,7 +72,7 @@ func TestPullPolicies(t *testing.T) {
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
 	file, err = os.Stat(*path)
 	assert.NoError(t, err)
 	// venv path modification time is checked
@@ -83,7 +83,7 @@ func TestPullPolicies(t *testing.T) {
 
 func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (string, any, error) {
 	stepID := "hello-world"
-	input := map[string]any{"name": templatePluginInput}
+	input := map[string]any{"name": examplePluginInput}
 
 	plugin, err := connector.Deploy(context.Background(), moduleName)
 
