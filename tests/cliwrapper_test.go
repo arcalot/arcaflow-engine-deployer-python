@@ -46,7 +46,7 @@ func TestImageExists(t *testing.T) {
 
 func TestImageFormatValidation(t *testing.T) {
 	moduleGitNoCommit := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
-	moduleGitCommit := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git@ac317b87f4d94d6ae0942b38ffaa49c7a4ff3550"
+	moduleGitCommit := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git@50b6787e0a53b94f7cafb9c40262054832b8c989"
 	moduleWrongFormat := "https://arcalot.io"
 	wrongFormatMessage := "wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]"
 	workDir := createWorkdir(t)
@@ -61,7 +61,7 @@ func TestImageFormatValidation(t *testing.T) {
 	assert.Equals(
 		t,
 		*path,
-		fmt.Sprintf("%s/arcaflow-plugin-example_ac317b87f4d94d6ae0942b38ffaa49c7a4ff3550", workDir),
+		fmt.Sprintf("%s/arcaflow-plugin-example_50b6787e0a53b94f7cafb9c40262054832b8c989", workDir),
 	)
 
 	path, err = wrapperGit.GetModulePath(moduleGitNoCommit)
