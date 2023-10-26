@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-const examplePluginInput string = "Tester McTesty"
+const examplePluginNickname string = "pythonuser"
 
 var inOutConfigGitPullAlways = `
 {
@@ -35,7 +35,7 @@ func TestRunStepGit(t *testing.T) {
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 }
 
 func TestPullPolicies(t *testing.T) {
@@ -51,14 +51,14 @@ func TestPullPolicies(t *testing.T) {
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 	// pull mode IfNotPresent, venv will be kept
 	OutputID, OutputData, Error = RunStep(t, connectorIfNotPresent, moduleName)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 	wrapper := getCliWrapper(t, workdir)
 	path, err := wrapper.GetModulePath(moduleName)
 	assert.NoError(t, err)
@@ -72,7 +72,7 @@ func TestPullPolicies(t *testing.T) {
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
 		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginInput)})
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 	file, err = os.Stat(*path)
 	assert.NoError(t, err)
 	// venv path modification time is checked
@@ -83,7 +83,12 @@ func TestPullPolicies(t *testing.T) {
 
 func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (string, any, error) {
 	stepID := "hello-world"
-	input := map[string]any{"name": examplePluginInput}
+	input := map[string]any{
+		"name": map[string]any{
+			"_type": "nickname",
+			"nick":  examplePluginNickname,
+		},
+	}
 
 	plugin, err := connector.Deploy(context.Background(), moduleName)
 
