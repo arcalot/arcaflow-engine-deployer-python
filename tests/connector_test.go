@@ -11,7 +11,7 @@ import (
 	"testing"
 )
 
-const templatePluginInput string = "Tester McTesty"
+const examplePluginNickname string = "pythonuser"
 
 var inOutConfigGitPullAlways = `
 {
@@ -28,40 +28,37 @@ var inOutConfigGitPullIfNotPresent = `
 `
 
 func TestRunStepGit(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	connector, _ := getConnector(t, inOutConfigGitPullAlways, nil)
-	outputID, outputData, err := RunStep(t, connector, moduleName)
-	assert.Equals(t, *outputID, "success")
-	assert.NoError(t, err)
+	OutputID, OutputData, Error := RunStep(t, connector, moduleName)
+	assert.NoError(t, Error)
+	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
-		outputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		OutputData.(map[interface{}]interface{}),
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 }
 
 func TestPullPolicies(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	// this test must be run in the same workdir so it's created upfront
 	// and passed to the getConnector func
 	workdir := createWorkdir(t)
 	connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
 	connectorIfNotPresent, _ := getConnector(t, inOutConfigGitPullIfNotPresent, &workdir)
 	// pull mode Always, venv will be removed if present and pulled again
-	outputID, outputData, err := RunStep(t, connectorAlways, moduleName)
-	assert.NoError(t, err)
-	assert.NotNil(t, outputData)
-	assert.NotNil(t, outputID)
-	assert.Equals(t, *outputID, "success")
-
+	OutputID, OutputData, Error := RunStep(t, connectorAlways, moduleName)
+	assert.NoError(t, Error)
+	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
-		outputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		OutputData.(map[interface{}]interface{}),
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 	// pull mode IfNotPresent, venv will be kept
-	outputID, outputData, err = RunStep(t, connectorIfNotPresent, moduleName)
-	assert.Equals(t, *outputID, "success")
-	assert.NoError(t, err)
+	OutputID, OutputData, Error = RunStep(t, connectorIfNotPresent, moduleName)
+	assert.NoError(t, Error)
+	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
-		outputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		OutputData.(map[interface{}]interface{}),
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 	wrapper := getCliWrapper(t, workdir)
 	path, err := wrapper.GetModulePath(moduleName)
 	assert.NoError(t, err)
@@ -70,12 +67,12 @@ func TestPullPolicies(t *testing.T) {
 	// venv path modification time is checked
 	startTime := file.ModTime()
 	// pull mode Always, venv will be removed if present and pulled again
-	outputID, outputData, err = RunStep(t, connectorAlways, moduleName)
-	assert.Equals(t, *outputID, "success")
-	assert.NoError(t, err)
+	OutputID, OutputData, Error = RunStep(t, connectorAlways, moduleName)
+	assert.NoError(t, Error)
+	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
-		outputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", templatePluginInput)})
+		OutputData.(map[interface{}]interface{}),
+		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 	file, err = os.Stat(*path)
 	assert.NoError(t, err)
 	// venv path modification time is checked
@@ -84,14 +81,19 @@ func TestPullPolicies(t *testing.T) {
 	assert.Equals(t, newTime.After(startTime), true)
 }
 
-func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (*string, any, error) {
+func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (string, any, error) {
 	stepID := "hello-world"
-	input := map[string]any{"name": templatePluginInput}
+	input := map[string]any{
+		"name": map[string]any{
+			"_type": "nickname",
+			"nick":  examplePluginNickname,
+		},
+	}
 
 	plugin, err := connector.Deploy(context.Background(), moduleName)
 
 	if err != nil {
-		return nil, nil, err
+		return "", nil, err
 	}
 	t.Cleanup(func() {
 		assert.NoError(t, plugin.Close())
@@ -111,13 +113,14 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (*st
 	assert.NoError(t, err)
 
 	// Executes the step and validates that the output is correct.
-	receivedSignals := make(chan schema.Input)
-	emittedSignals := make(chan schema.Input)
-	outputID, outputData, err := atpClient.Execute(
-		schema.Input{ID: stepID, InputData: input},
-		receivedSignals,
-		emittedSignals,
+	receivedSignalsChan := make(chan schema.Input)
+	emittedSignalsChan := make(chan schema.Input)
+	executionResult := atpClient.Execute(
+		schema.Input{RunID: t.Name(), ID: stepID, InputData: input},
+		receivedSignalsChan,
+		emittedSignalsChan,
 	)
-	return &outputID, outputData, err
+	assert.NoError(t, atpClient.Close())
 
+	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
 }

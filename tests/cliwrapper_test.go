@@ -9,7 +9,7 @@ import (
 )
 
 func TestPullImage(t *testing.T) {
-	module := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	module := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	workDir := createWorkdir(t)
 
 	pythonPath, err := getPythonPath()
@@ -24,7 +24,7 @@ func TestPullImage(t *testing.T) {
 }
 
 func TestImageExists(t *testing.T) {
-	module := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
+	module := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	workDir := createWorkdir(t)
 	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
@@ -45,8 +45,8 @@ func TestImageExists(t *testing.T) {
 }
 
 func TestImageFormatValidation(t *testing.T) {
-	moduleGitNoCommit := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git"
-	moduleGitCommit := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@8e43b657db73929d6f8ccb893f059bb67658523f"
+	moduleGitNoCommit := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
+	moduleGitCommit := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git@50b6787e0a53b94f7cafb9c40262054832b8c989"
 	moduleWrongFormat := "https://arcalot.io"
 	wrongFormatMessage := "wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]"
 	workDir := createWorkdir(t)
@@ -61,12 +61,12 @@ func TestImageFormatValidation(t *testing.T) {
 	assert.Equals(
 		t,
 		*path,
-		fmt.Sprintf("%s/arcaflow-plugin-template-python_8e43b657db73929d6f8ccb893f059bb67658523f", workDir),
+		fmt.Sprintf("%s/arcaflow-plugin-example_50b6787e0a53b94f7cafb9c40262054832b8c989", workDir),
 	)
 
 	path, err = wrapperGit.GetModulePath(moduleGitNoCommit)
 	assert.NoError(t, err)
-	assert.Equals(t, *path, fmt.Sprintf("%s/arcaflow-plugin-template-python_latest", workDir))
+	assert.Equals(t, *path, fmt.Sprintf("%s/arcaflow-plugin-example_latest", workDir))
 
 	_, err = wrapperGit.GetModulePath(moduleWrongFormat)
 	assert.Error(t, err)
