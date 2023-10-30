@@ -1,9 +1,9 @@
-package config
+package pythondeployer
 
 type Config struct {
-	PythonPath                  string           `json:"pythonPath"`
-	WorkDir                     string           `json:"workdir"`
-	ModulePullPolicy            ModulePullPolicy `json:"modulePullPolicy"`
+	PythonPath       string           `json:"pythonPath"`
+	WorkDir          string           `json:"workdir"`
+	ModulePullPolicy ModulePullPolicy `json:"modulePullPolicy"`
 }
 
 type ModulePullPolicy string

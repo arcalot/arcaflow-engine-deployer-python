@@ -8,7 +8,6 @@ import (
 	"go.flow.arcalot.io/deployer"
 	pythondeployer "go.flow.arcalot.io/pythondeployer"
 	wrapper "go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -71,7 +70,7 @@ func getCliWrapper(t *testing.T, workdir string) wrapper.CliWrapper {
 	return wrapper.NewCliWrapper(pythonPath, workDir, logger)
 }
 
-func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *config.Config) {
+func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *pythondeployer.Config) {
 	var serializedConfig any
 	if err := json.Unmarshal([]byte(configJSON), &serializedConfig); err != nil {
 		t.Fatal(err)
