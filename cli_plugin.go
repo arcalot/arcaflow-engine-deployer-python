@@ -1,16 +1,15 @@
 package pythondeployer
 
 import (
-	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"go.arcalot.io/log/v2"
+	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"io"
 )
 
 type CliPlugin struct {
 	wrapper        cliwrapper.CliWrapper
 	containerImage string
-	config         *config.Config
+	config         *Config
 	logger         log.Logger
 	stdin          io.WriteCloser
 	stdout         io.ReadCloser

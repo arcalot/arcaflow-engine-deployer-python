@@ -114,6 +114,8 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	cmdCreateVenv.Stderr = &cmdCreateOut
 	if err := cmdCreateVenv.Run(); err != nil {
 		return fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
+	} else if cmdCreateOut.Len() > 0 {
+		p.logger.Warningf("Python deployer venv command had stderr output: %s", cmdCreateOut.String())
 	}
 
 	// pull module
@@ -123,6 +125,8 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	cmdPip.Stderr = &cmdPipOut
 	if err := cmdPip.Run(); err != nil {
 		return fmt.Errorf("error while running pip. stderr: '%s', err: '%s'", cmdPipOut.String(), err)
+	} else if cmdPipOut.Len() > 0 {
+		p.logger.Warningf("Python deployer pip command had stderr output: %s", cmdPipOut.String())
 	}
 	return nil
 }
@@ -153,7 +157,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 
-	if err := p.deployCommand.Start(); err != nil {
+	if err := p.deployCommand.Start(); err != nil || p.stdErrBuff.Len() > 0 {
 		return nil, nil, fmt.Errorf("error while attempting to run python stderr: '%s', err: '%s'", p.stdErrBuff.String(), err.Error())
 	}
 	return stdin, stdout, nil
