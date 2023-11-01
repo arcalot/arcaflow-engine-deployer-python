@@ -20,7 +20,7 @@ func NewFactory() deployer.ConnectorFactory[*Config] {
 type factory struct {
 }
 
-func (f factory) ID() string {
+func (f factory) Name() string {
 	return "python"
 }
 
