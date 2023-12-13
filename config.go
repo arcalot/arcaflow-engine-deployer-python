@@ -3,6 +3,7 @@ package pythondeployer
 type Config struct {
 	PythonPath       string           `json:"pythonPath"`
 	WorkDir          string           `json:"workdir"`
+	RootDir          string           `json:"rootdir"`
 	ModulePullPolicy ModulePullPolicy `json:"modulePullPolicy"`
 }
 

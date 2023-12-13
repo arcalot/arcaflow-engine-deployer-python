@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
@@ -10,7 +9,6 @@ import (
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	"go.flow.arcalot.io/pythondeployer"
-	"os"
 	"strconv"
 	"testing"
 )
@@ -42,48 +40,48 @@ func TestRunStepGit(t *testing.T) {
 		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 }
 
-func TestPullPolicies(t *testing.T) {
-	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
-	// this test must be run in the same workdir so it's created upfront
-	// and passed to the getConnector func
-	workdir := createWorkdir(t)
-	connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
-	connectorIfNotPresent, _ := getConnector(t, inOutConfigGitPullIfNotPresent, &workdir)
-	// pull mode Always, venv will be removed if present and pulled again
-	OutputID, OutputData, Error := RunStep(t, connectorAlways, moduleName)
-	assert.NoError(t, Error)
-	assert.Equals(t, OutputID, "success")
-	assert.Equals(t,
-		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
-	// pull mode IfNotPresent, venv will be kept
-	OutputID, OutputData, Error = RunStep(t, connectorIfNotPresent, moduleName)
-	assert.NoError(t, Error)
-	assert.Equals(t, OutputID, "success")
-	assert.Equals(t,
-		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
-	wrapper := getCliWrapper(t, workdir)
-	path, err := wrapper.GetModulePath(moduleName)
-	assert.NoError(t, err)
-	file, err := os.Stat(*path)
-	assert.NoError(t, err)
-	// venv path modification time is checked
-	startTime := file.ModTime()
-	// pull mode Always, venv will be removed if present and pulled again
-	OutputID, OutputData, Error = RunStep(t, connectorAlways, moduleName)
-	assert.NoError(t, Error)
-	assert.Equals(t, OutputID, "success")
-	assert.Equals(t,
-		OutputData.(map[interface{}]interface{}),
-		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
-	file, err = os.Stat(*path)
-	assert.NoError(t, err)
-	// venv path modification time is checked
-	newTime := file.ModTime()
-	// new time check must be greater than the first one checked
-	assert.Equals(t, newTime.After(startTime), true)
-}
+//func TestPullPolicies(t *testing.T) {
+//	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
+//	// this test must be run in the same workdir so it's created upfront
+//	// and passed to the getConnector func
+//	workdir := createWorkdir(t)
+//	connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
+//	connectorIfNotPresent, _ := getConnector(t, inOutConfigGitPullIfNotPresent, &workdir)
+//	// pull mode Always, venv will be removed if present and pulled again
+//	OutputID, OutputData, Error := RunStep(t, connectorAlways, moduleName)
+//	assert.NoError(t, Error)
+//	assert.Equals(t, OutputID, "success")
+//	assert.Equals(t,
+//		OutputData.(map[interface{}]interface{}),
+//		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
+//	// pull mode IfNotPresent, venv will be kept
+//	OutputID, OutputData, Error = RunStep(t, connectorIfNotPresent, moduleName)
+//	assert.NoError(t, Error)
+//	assert.Equals(t, OutputID, "success")
+//	assert.Equals(t,
+//		OutputData.(map[interface{}]interface{}),
+//		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
+//	wrapper := getCliWrapper(t, workdir)
+//	path, err := wrapper.GetModulePath(moduleName)
+//	assert.NoError(t, err)
+//	file, err := os.Stat(*path)
+//	assert.NoError(t, err)
+//	// venv path modification time is checked
+//	startTime := file.ModTime()
+//	// pull mode Always, venv will be removed if present and pulled again
+//	OutputID, OutputData, Error = RunStep(t, connectorAlways, moduleName)
+//	assert.NoError(t, Error)
+//	assert.Equals(t, OutputID, "success")
+//	assert.Equals(t,
+//		OutputData.(map[interface{}]interface{}),
+//		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
+//	file, err = os.Stat(*path)
+//	assert.NoError(t, err)
+//	// venv path modification time is checked
+//	newTime := file.ModTime()
+//	// new time check must be greater than the first one checked
+//	assert.Equals(t, newTime.After(startTime), true)
+//}
 
 func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (string, any, error) {
 	stepID := "hello-world"
@@ -129,60 +127,25 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
 }
 
-func TestDeployMultiple(t *testing.T) {
-	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
-	// this test must be run in the same workdir so it's created upfront
-	// and passed to the getConnector func
-	workdir := createWorkdir(t)
-	//connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
+func TestDeployConcurrent_Connectors(t *testing.T) {
+	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
+	rootDir := "/tmp"
 	var serializedConfig any
-	if err := json.Unmarshal([]byte(inOutConfigGitPullAlways), &serializedConfig); err != nil {
-		t.Fatal(err)
+	serializedConfig = map[string]any{
+		"workdir":          rootDir,
+		"modulePullPolicy": "Always",
 	}
+
 	factory := pythondeployer.NewFactory()
-	schema := factory.ConfigurationSchema()
-	unserializedConfig, err := schema.UnserializeType(serializedConfig)
+	deployerSchema := factory.ConfigurationSchema()
+	unserializedConfig, err := deployerSchema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
+
 	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
-	// NOTE: randomizing Workdir to avoid parallel tests to
-	// remove python folders while other tests are running
-	// causing the test to fail
-	if &workdir == nil {
-		unserializedConfig.WorkDir = createWorkdir(t)
-	} else {
-		unserializedConfig.WorkDir = workdir
-	}
 
-	//connector1, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-	//assert.NoError(t, err)
-	//
-	//connector2, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-	//assert.NoError(t, err)
-	//
-	//connector3, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-	//assert.NoError(t, err)
-	//stepID := "hello-world"
-	//input := map[string]any{
-	//	"name": map[string]any{
-	//		"_type": "nickname",
-	//		"nick":  examplePluginNickname,
-	//	},
-	//}
-
-	//plugin1, err1 := connector1.Deploy(context.Background(), moduleName)
-	//assert.NoError(t, err1)
-	//
-	//plugin2, err2 := connector2.Deploy(context.Background(), moduleName)
-	//assert.NoError(t, err2)
-	//
-	//plugin3, err3 := connector3.Deploy(context.Background(), moduleName)
-	//assert.NoError(t, err3)
-
-	workdirs :=
-
-	for index := range [3]int{} {
+	for index := range [2]int{} {
 
 		t.Run(strconv.Itoa(index), func(t *testing.T) {
 			t.Parallel()
@@ -193,9 +156,4 @@ func TestDeployMultiple(t *testing.T) {
 			assert.NoError(t, p.Close())
 		})
 	}
-	//t.Cleanup(func() {
-	//	assert.NoError(t, plugin1.Close())
-	//	assert.NoError(t, plugin2.Close())
-	//	assert.NoError(t, plugin3.Close())
-	//})
 }

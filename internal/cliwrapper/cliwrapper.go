@@ -15,7 +15,7 @@ import (
 
 type cliWrapper struct {
 	pythonFullPath string
-	workDir        string
+	connectorDir   string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     bytes.Buffer
@@ -30,7 +30,7 @@ func NewCliWrapper(pythonFullPath string,
 	return &cliWrapper{
 		pythonFullPath: pythonFullPath,
 		logger:         logger,
-		workDir:        workDir,
+		connectorDir:   workDir,
 	}
 }
 
@@ -62,9 +62,9 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 	}
 	modulePath := ""
 	if pythonModule.ModuleVersion != nil {
-		modulePath = fmt.Sprintf("%s/%s_%s", p.workDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
+		modulePath = fmt.Sprintf("%s/%s_%s", p.connectorDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
 	} else {
-		modulePath = fmt.Sprintf("%s/%s_latest", p.workDir, *pythonModule.ModuleName)
+		modulePath = fmt.Sprintf("%s/%s_latest", p.connectorDir, *pythonModule.ModuleName)
 	}
 	return &modulePath, err
 }
@@ -99,7 +99,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.Mkdir(*modulePath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(*modulePath, os.ModePerm); err != nil {
 		return err
 	}
 
@@ -148,6 +148,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
 	p.deployCommand.Stderr = &p.stdErrBuff
+
 	stdin, err := p.deployCommand.StdinPipe()
 	if err != nil {
 		return nil, nil, err
@@ -171,6 +172,19 @@ func (p *cliWrapper) KillAndClean() error {
 	}
 	p.logger.Infof("killing config process with pid %d", p.deployCommand.Process.Pid)
 	err := p.deployCommand.Process.Kill()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *cliWrapper) RemoveImage(fullModuleName string) error {
+	modulePath, err := p.GetModulePath(fullModuleName)
+	if err != nil {
+		return err
+	}
+
+	err = os.RemoveAll(*modulePath)
 	if err != nil {
 		return err
 	}
