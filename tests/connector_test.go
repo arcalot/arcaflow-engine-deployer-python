@@ -132,12 +132,13 @@ func TestDeployMultiple(t *testing.T) {
 	//moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
 
+	rootDir := "tmp"
 	var serializedConfig any
 	serializedConfig = map[string]any{
 		"workdir":          "/tmp",
 		"modulePullPolicy": "Always",
 	}
-	//rootDir := "tmp"
+
 	//workdir := createWorkdir(t, "tmp")
 
 	factory := pythondeployer.NewFactory()
@@ -164,7 +165,7 @@ func TestDeployMultiple(t *testing.T) {
 
 		t.Run(strconv.Itoa(index), func(t *testing.T) {
 			t.Parallel()
-			workpath, err := os.MkdirTemp("", "")
+			workpath, err := os.MkdirTemp(fmt.Sprintf("/%s", rootDir), "")
 			unserializedConfig.WorkDir = workpath
 			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
 			assert.NoError(t, err)
