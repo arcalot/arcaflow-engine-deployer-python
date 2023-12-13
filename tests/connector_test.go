@@ -2,7 +2,6 @@ package tests
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
@@ -46,7 +45,7 @@ func TestPullPolicies(t *testing.T) {
 	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	// this test must be run in the same workdir so it's created upfront
 	// and passed to the getConnector func
-	workdir := createWorkdir(t)
+	workdir := createWorkdir(t, "tmp")
 	connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
 	connectorIfNotPresent, _ := getConnector(t, inOutConfigGitPullIfNotPresent, &workdir)
 	// pull mode Always, venv will be removed if present and pulled again
@@ -130,72 +129,50 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 }
 
 func TestDeployMultiple(t *testing.T) {
-	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
-	// this test must be run in the same workdir so it's created upfront
-	// and passed to the getConnector func
-	workdir := createWorkdir(t)
-	//connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
+	//moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
+	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
+
 	var serializedConfig any
-	if err := json.Unmarshal([]byte(inOutConfigGitPullAlways), &serializedConfig); err != nil {
-		t.Fatal(err)
+	serializedConfig = map[string]any{
+		"workdir":          "/tmp",
+		"modulePullPolicy": "Always",
 	}
+	//rootDir := "tmp"
+	//workdir := createWorkdir(t, "tmp")
+
 	factory := pythondeployer.NewFactory()
-	schema := factory.ConfigurationSchema()
-	unserializedConfig, err := schema.UnserializeType(serializedConfig)
+	deployerSchema := factory.ConfigurationSchema()
+	unserializedConfig, err := deployerSchema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
+
 	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
 	// NOTE: randomizing Workdir to avoid parallel tests to
 	// remove python folders while other tests are running
 	// causing the test to fail
-	if &workdir == nil {
-		unserializedConfig.WorkDir = createWorkdir(t)
-	} else {
-		unserializedConfig.WorkDir = workdir
-	}
-
-	//connector1, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-	//assert.NoError(t, err)
-	//
-	//connector2, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-	//assert.NoError(t, err)
-	//
-	//connector3, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-	//assert.NoError(t, err)
-	//stepID := "hello-world"
-	//input := map[string]any{
-	//	"name": map[string]any{
-	//		"_type": "nickname",
-	//		"nick":  examplePluginNickname,
-	//	},
+	//if &workdir == nil {
+	//	unserializedConfig.WorkDir = createWorkdir(t, "tmp")
+	//} else {
+	//	unserializedConfig.WorkDir = workdir
 	//}
+	//unserializedConfig.WorkDir = createWorkdir(t, fmt.Sprintf("%s", rootDir))
 
-	//plugin1, err1 := connector1.Deploy(context.Background(), moduleName)
-	//assert.NoError(t, err1)
-	//
-	//plugin2, err2 := connector2.Deploy(context.Background(), moduleName)
-	//assert.NoError(t, err2)
-	//
-	//plugin3, err3 := connector3.Deploy(context.Background(), moduleName)
-	//assert.NoError(t, err3)
-
-	workdirs :=
+	//workdirroot, err := os.MkdirAll(rootDir)
 
 	for index := range [3]int{} {
 
 		t.Run(strconv.Itoa(index), func(t *testing.T) {
 			t.Parallel()
+			workpath, err := os.MkdirTemp("", "")
+			unserializedConfig.WorkDir = workpath
 			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
 			assert.NoError(t, err)
 			p, err := c.Deploy(context.Background(), moduleName)
 			assert.NoError(t, err)
 			assert.NoError(t, p.Close())
+			err = os.RemoveAll(workpath)
+			assert.NoError(t, err)
 		})
 	}
-	//t.Cleanup(func() {
-	//	assert.NoError(t, plugin1.Close())
-	//	assert.NoError(t, plugin2.Close())
-	//	assert.NoError(t, plugin3.Close())
-	//})
 }
