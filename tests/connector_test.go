@@ -2,12 +2,16 @@ package tests
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"go.arcalot.io/assert"
+	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
+	"go.flow.arcalot.io/pythondeployer"
 	"os"
+	"strconv"
 	"testing"
 )
 
@@ -123,4 +127,75 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 	assert.NoError(t, atpClient.Close())
 
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
+}
+
+func TestDeployMultiple(t *testing.T) {
+	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
+	// this test must be run in the same workdir so it's created upfront
+	// and passed to the getConnector func
+	workdir := createWorkdir(t)
+	//connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
+	var serializedConfig any
+	if err := json.Unmarshal([]byte(inOutConfigGitPullAlways), &serializedConfig); err != nil {
+		t.Fatal(err)
+	}
+	factory := pythondeployer.NewFactory()
+	schema := factory.ConfigurationSchema()
+	unserializedConfig, err := schema.UnserializeType(serializedConfig)
+	assert.NoError(t, err)
+	pythonPath, err := getPythonPath()
+	assert.NoError(t, err)
+	unserializedConfig.PythonPath = pythonPath
+	// NOTE: randomizing Workdir to avoid parallel tests to
+	// remove python folders while other tests are running
+	// causing the test to fail
+	if &workdir == nil {
+		unserializedConfig.WorkDir = createWorkdir(t)
+	} else {
+		unserializedConfig.WorkDir = workdir
+	}
+
+	//connector1, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+	//assert.NoError(t, err)
+	//
+	//connector2, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+	//assert.NoError(t, err)
+	//
+	//connector3, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+	//assert.NoError(t, err)
+	//stepID := "hello-world"
+	//input := map[string]any{
+	//	"name": map[string]any{
+	//		"_type": "nickname",
+	//		"nick":  examplePluginNickname,
+	//	},
+	//}
+
+	//plugin1, err1 := connector1.Deploy(context.Background(), moduleName)
+	//assert.NoError(t, err1)
+	//
+	//plugin2, err2 := connector2.Deploy(context.Background(), moduleName)
+	//assert.NoError(t, err2)
+	//
+	//plugin3, err3 := connector3.Deploy(context.Background(), moduleName)
+	//assert.NoError(t, err3)
+
+	workdirs :=
+
+	for index := range [3]int{} {
+
+		t.Run(strconv.Itoa(index), func(t *testing.T) {
+			t.Parallel()
+			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+			assert.NoError(t, err)
+			p, err := c.Deploy(context.Background(), moduleName)
+			assert.NoError(t, err)
+			assert.NoError(t, p.Close())
+		})
+	}
+	//t.Cleanup(func() {
+	//	assert.NoError(t, plugin1.Close())
+	//	assert.NoError(t, plugin2.Close())
+	//	assert.NoError(t, plugin3.Close())
+	//})
 }
