@@ -41,7 +41,8 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 	cleanpath := filepath.Clean(config.WorkDir)
 	workdir, err := os.MkdirTemp(cleanpath, "")
 	if err != nil {
-		return &Connector{}, fmt.Errorf("error creating temporary directory for python connector (%w)", err)
+		return nil, fmt.Errorf(
+			"error creating temporary directory for python connector (%w)", err)
 	}
 
 	python := cliwrapper.NewCliWrapper(pythonPath, workdir, logger)

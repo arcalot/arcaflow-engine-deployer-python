@@ -148,6 +148,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
 	p.deployCommand.Stderr = &p.stdErrBuff
+
 	stdin, err := p.deployCommand.StdinPipe()
 	if err != nil {
 		return nil, nil, err
@@ -171,6 +172,19 @@ func (p *cliWrapper) KillAndClean() error {
 	}
 	p.logger.Infof("killing config process with pid %d", p.deployCommand.Process.Pid)
 	err := p.deployCommand.Process.Kill()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *cliWrapper) RemoveImage(fullModuleName string) error {
+	modulePath, err := p.GetModulePath(fullModuleName)
+	if err != nil {
+		return err
+	}
+
+	err = os.RemoveAll(*modulePath)
 	if err != nil {
 		return err
 	}

@@ -5,7 +5,6 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"os"
 )
 
 type Connector struct {
@@ -44,22 +43,17 @@ func (c *Connector) pullModule(_ context.Context, fullModuleName string) error {
 		return err
 	}
 
-	if *imageExists && c.config.ModulePullPolicy == ModulePullPolicyAlways {
+	if *imageExists && c.config.ModulePullPolicy == ModulePullPolicyIfNotPresent {
+		c.logger.Debugf("module already present skipping pull: %s", fullModuleName)
+		return nil
+	} else if *imageExists && c.config.ModulePullPolicy == ModulePullPolicyAlways {
 		// if the module exists but the policy is to pull always
 		// deletes the module venv path and the module is pulled again
-		modulePath, err := c.pythonCliWrapper.GetModulePath(fullModuleName)
-		if err != nil {
-			return err
-		}
-
-		err = os.RemoveAll(*modulePath)
+		err := c.pythonCliWrapper.RemoveImage(fullModuleName)
 		if err != nil {
 			return err
 		}
 		c.logger.Debugf("module already present, ModulePullPolicy == \"Always\", pulling again...")
-	} else if *imageExists && c.config.ModulePullPolicy == ModulePullPolicyIfNotPresent {
-		c.logger.Debugf("module already present skipping pull: %s", fullModuleName)
-		return nil
 	}
 
 	c.logger.Debugf("pulling module: %s", fullModuleName)
