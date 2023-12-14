@@ -45,7 +45,7 @@ func TestPullPolicies(t *testing.T) {
 	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
 	// this test must be run in the same workdir so it's created upfront
 	// and passed to the getConnector func
-	workdir := createWorkdir(t, "tmp")
+	workdir := createWorkdir(t)
 	connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
 	connectorIfNotPresent, _ := getConnector(t, inOutConfigGitPullIfNotPresent, &workdir)
 	// pull mode Always, venv will be removed if present and pulled again
@@ -128,18 +128,15 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
 }
 
-func TestDeployMultiple(t *testing.T) {
-	//moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
+func TestDeployConcurrent_Connectors(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
 
-	rootDir := "tmp"
+	rootDir := "/tmp"
 	var serializedConfig any
 	serializedConfig = map[string]any{
-		"workdir":          "/tmp",
+		"workdir":          rootDir,
 		"modulePullPolicy": "Always",
 	}
-
-	//workdir := createWorkdir(t, "tmp")
 
 	factory := pythondeployer.NewFactory()
 	deployerSchema := factory.ConfigurationSchema()
@@ -149,30 +146,49 @@ func TestDeployMultiple(t *testing.T) {
 	pythonPath, err := getPythonPath()
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
-	// NOTE: randomizing Workdir to avoid parallel tests to
-	// remove python folders while other tests are running
-	// causing the test to fail
-	//if &workdir == nil {
-	//	unserializedConfig.WorkDir = createWorkdir(t, "tmp")
-	//} else {
-	//	unserializedConfig.WorkDir = workdir
-	//}
-	//unserializedConfig.WorkDir = createWorkdir(t, fmt.Sprintf("%s", rootDir))
-
-	//workdirroot, err := os.MkdirAll(rootDir)
 
 	for index := range [3]int{} {
 
 		t.Run(strconv.Itoa(index), func(t *testing.T) {
 			t.Parallel()
-			workpath, err := os.MkdirTemp(fmt.Sprintf("/%s", rootDir), "")
-			unserializedConfig.WorkDir = workpath
 			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
 			assert.NoError(t, err)
 			p, err := c.Deploy(context.Background(), moduleName)
 			assert.NoError(t, err)
 			assert.NoError(t, p.Close())
-			err = os.RemoveAll(workpath)
+			assert.NoError(t, err)
+		})
+	}
+}
+
+func TestDeployConcurrent_Plugins(t *testing.T) {
+	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
+
+	rootDir := "/tmp"
+	var serializedConfig any
+	serializedConfig = map[string]any{
+		"workdir":          rootDir,
+		"modulePullPolicy": "Always",
+	}
+
+	factory := pythondeployer.NewFactory()
+	deployerSchema := factory.ConfigurationSchema()
+	unserializedConfig, err := deployerSchema.UnserializeType(serializedConfig)
+	assert.NoError(t, err)
+
+	pythonPath, err := getPythonPath()
+	assert.NoError(t, err)
+	unserializedConfig.PythonPath = pythonPath
+
+	for index := range [3]int{} {
+
+		t.Run(strconv.Itoa(index), func(t *testing.T) {
+			t.Parallel()
+			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+			assert.NoError(t, err)
+			p, err := c.Deploy(context.Background(), moduleName)
+			assert.NoError(t, err)
+			assert.NoError(t, p.Close())
 			assert.NoError(t, err)
 		})
 	}

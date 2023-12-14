@@ -15,8 +15,7 @@ import (
 
 type cliWrapper struct {
 	pythonFullPath string
-	workDir        string
-	rootDir        string
+	connectorDir   string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     bytes.Buffer
@@ -31,8 +30,7 @@ func NewCliWrapper(pythonFullPath string,
 	return &cliWrapper{
 		pythonFullPath: pythonFullPath,
 		logger:         logger,
-		workDir:        workDir,
-		rootDir:        workDir,
+		connectorDir:   workDir,
 	}
 }
 
@@ -64,9 +62,9 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 	}
 	modulePath := ""
 	if pythonModule.ModuleVersion != nil {
-		modulePath = fmt.Sprintf("%s/%s_%s", p.workDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
+		modulePath = fmt.Sprintf("%s/%s_%s", p.connectorDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
 	} else {
-		modulePath = fmt.Sprintf("%s/%s_latest", p.workDir, *pythonModule.ModuleName)
+		modulePath = fmt.Sprintf("%s/%s_latest", p.connectorDir, *pythonModule.ModuleName)
 	}
 	return &modulePath, err
 }
