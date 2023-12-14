@@ -16,6 +16,7 @@ import (
 type cliWrapper struct {
 	pythonFullPath string
 	workDir        string
+	rootDir        string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     bytes.Buffer
@@ -31,6 +32,7 @@ func NewCliWrapper(pythonFullPath string,
 		pythonFullPath: pythonFullPath,
 		logger:         logger,
 		workDir:        workDir,
+		rootDir:        workDir,
 	}
 }
 
@@ -99,7 +101,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err != nil {
 		return err
 	}
-	if err := os.Mkdir(*modulePath, os.ModePerm); err != nil {
+	if err := os.MkdirAll(*modulePath, os.ModePerm); err != nil {
 		return err
 	}
 
