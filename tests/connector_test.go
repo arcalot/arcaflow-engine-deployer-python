@@ -40,49 +40,6 @@ func TestRunStepGit(t *testing.T) {
 		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
 }
 
-//func TestPullPolicies(t *testing.T) {
-//	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
-//	// this test must be run in the same workdir so it's created upfront
-//	// and passed to the getConnector func
-//	workdir := createWorkdir(t)
-//	connectorAlways, _ := getConnector(t, inOutConfigGitPullAlways, &workdir)
-//	connectorIfNotPresent, _ := getConnector(t, inOutConfigGitPullIfNotPresent, &workdir)
-//	// pull mode Always, venv will be removed if present and pulled again
-//	OutputID, OutputData, Error := RunStep(t, connectorAlways, moduleName)
-//	assert.NoError(t, Error)
-//	assert.Equals(t, OutputID, "success")
-//	assert.Equals(t,
-//		OutputData.(map[interface{}]interface{}),
-//		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
-//	// pull mode IfNotPresent, venv will be kept
-//	OutputID, OutputData, Error = RunStep(t, connectorIfNotPresent, moduleName)
-//	assert.NoError(t, Error)
-//	assert.Equals(t, OutputID, "success")
-//	assert.Equals(t,
-//		OutputData.(map[interface{}]interface{}),
-//		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
-//	wrapper := getCliWrapper(t, workdir)
-//	path, err := wrapper.GetModulePath(moduleName)
-//	assert.NoError(t, err)
-//	file, err := os.Stat(*path)
-//	assert.NoError(t, err)
-//	// venv path modification time is checked
-//	startTime := file.ModTime()
-//	// pull mode Always, venv will be removed if present and pulled again
-//	OutputID, OutputData, Error = RunStep(t, connectorAlways, moduleName)
-//	assert.NoError(t, Error)
-//	assert.Equals(t, OutputID, "success")
-//	assert.Equals(t,
-//		OutputData.(map[interface{}]interface{}),
-//		map[interface{}]interface{}{"message": fmt.Sprintf("Hello, %s!", examplePluginNickname)})
-//	file, err = os.Stat(*path)
-//	assert.NoError(t, err)
-//	// venv path modification time is checked
-//	newTime := file.ModTime()
-//	// new time check must be greater than the first one checked
-//	assert.Equals(t, newTime.After(startTime), true)
-//}
-
 func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (string, any, error) {
 	stepID := "hello-world"
 	input := map[string]any{

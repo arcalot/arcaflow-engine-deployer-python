@@ -158,12 +158,12 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	if err != nil {
 		return nil, nil, err
 	}
-	if p.stdErrBuff.Len() > 0 {
-		return nil, nil, fmt.Errorf("python process stderr already has content '%s'", p.stdErrBuff.String())
-	}
 	err = p.deployCommand.Start()
 	if err != nil {
 		return nil, nil, fmt.Errorf("error starting python process (%w)", err)
+	}
+	if p.stdErrBuff.Len() > 0 {
+		return nil, nil, fmt.Errorf("python process stderr already has content '%s'", p.stdErrBuff.String())
 	}
 	return stdin, stdout, nil
 }
