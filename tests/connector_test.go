@@ -77,6 +77,9 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
 }
 
+// This test ensures that this deployer can create and execute
+// connectors concurrently, and that those connectors can deploy
+// plugins concurrently.
 func TestDeployConcurrent_ConnectorsAndPlugins(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
 	rootDir := "/tmp"
@@ -94,25 +97,31 @@ func TestDeployConcurrent_ConnectorsAndPlugins(t *testing.T) {
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
 
+	// Choose how many connectors and plugins to make
 	const n_connectors = 10
 	const n_plugins = 3
 	wg := &sync.WaitGroup{}
 	wg.Add(n_connectors * n_plugins)
 
+	// Test for issues that might occur during concurrent creation of connectors
+	// and deployment of plugins
+	// Make a goroutine for each connector
 	for j := 0; j < n_connectors; j++ {
 		go func() {
-			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+			connector, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
 			assert.NoError(t, err)
+
+			// Make a goroutine for each plugin
 			for k := 0; k < n_plugins; k++ {
 				go func() {
-					p, err := c.Deploy(context.Background(), moduleName)
+					plugin, err := connector.Deploy(context.Background(), moduleName)
 					assert.NoError(t, err)
-					assert.NoError(t, p.Close())
+					assert.NoError(t, plugin.Close())
 					wg.Done()
 				}()
 			}
 		}()
 	}
-
+	// Wait for all the plugins to be done
 	wg.Wait()
 }
