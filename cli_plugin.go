@@ -4,13 +4,11 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"io"
-	"os"
 )
 
 type CliPlugin struct {
 	wrapper        cliwrapper.CliWrapper
 	containerImage string
-	process        *os.Process
 	workdir        string
 	config         *Config
 	logger         log.Logger
