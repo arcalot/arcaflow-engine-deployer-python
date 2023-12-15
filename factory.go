@@ -38,18 +38,22 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 		return &Connector{}, fmt.Errorf("python binary check failed with error: %w", err)
 	}
 
-	cleanpath := filepath.Clean(config.WorkDir)
-	workdir, err := os.MkdirTemp(cleanpath, "")
+	workdir, err := os.MkdirTemp(filepath.Clean(config.WorkDir), "")
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error creating temporary directory for python connector (%w)", err)
 	}
 
-	python := cliwrapper.NewCliWrapper(pythonPath, workdir, logger)
+	//python := cliwrapper.NewCliWrapper(pythonPath, workdir, logger)
+	pythonFactory, err := cliwrapper.NewCliWrapperFactory(pythonPath, workdir, logger)
+	if err != nil {
+		return nil, err
+	}
 	return &Connector{
-		config:           config,
-		logger:           logger,
-		pythonCliWrapper: python,
+		config: config,
+		logger: logger,
+		//pythonCliWrapper: python,
+		pythonFactory: pythonFactory,
 	}, nil
 }
 

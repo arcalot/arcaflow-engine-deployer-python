@@ -16,6 +16,7 @@ import (
 type cliWrapper struct {
 	pythonFullPath string
 	connectorDir   string
+	pluginDir      string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     bytes.Buffer
@@ -30,7 +31,7 @@ func NewCliWrapper(pythonFullPath string,
 	return &cliWrapper{
 		pythonFullPath: pythonFullPath,
 		logger:         logger,
-		connectorDir:   workDir,
+		pluginDir:      workDir,
 	}
 }
 
@@ -62,9 +63,9 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 	}
 	modulePath := ""
 	if pythonModule.ModuleVersion != nil {
-		modulePath = fmt.Sprintf("%s/%s_%s", p.connectorDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
+		modulePath = fmt.Sprintf("%s/%s_%s", p.pluginDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
 	} else {
-		modulePath = fmt.Sprintf("%s/%s_latest", p.connectorDir, *pythonModule.ModuleName)
+		modulePath = fmt.Sprintf("%s/%s_latest", p.pluginDir, *pythonModule.ModuleName)
 	}
 	return &modulePath, err
 }
@@ -158,9 +159,16 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 
-	if err := p.deployCommand.Start(); err != nil || p.stdErrBuff.Len() > 0 {
-		return nil, nil, fmt.Errorf("error while attempting to run python stderr: '%s', err: '%s'", p.stdErrBuff.String(), err.Error())
+	if p.stdErrBuff.Len() > 0 {
+		return nil, nil, fmt.Errorf("python process stderr already has content '%s'", p.stdErrBuff.String())
 	}
+	err = p.deployCommand.Start()
+	if err != nil {
+		return nil, nil, fmt.Errorf("error starting python process (%w)", err)
+	}
+	//if err := p.deployCommand.Start(); err != nil || p.stdErrBuff.Len() > 0 {
+	//	return nil, nil, fmt.Errorf("error while attempting to run python stderr: '%s', err: '%s'", p.stdErrBuff.String(), err.Error())
+	//}
 	return stdin, stdout, nil
 }
 

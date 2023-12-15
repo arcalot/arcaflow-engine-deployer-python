@@ -8,24 +8,28 @@ import (
 )
 
 type Connector struct {
-	config           *Config
-	logger           log.Logger
-	pythonCliWrapper cliwrapper.CliWrapper
+	config        *Config
+	logger        log.Logger
+	pythonFactory cliwrapper.CliWrapperFactory
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
-	if err := c.pullModule(ctx, image); err != nil {
+
+	pythonCliWrapper, err := c.pythonFactory.Create("", c.logger)
+	if err != nil {
+		return nil, err
+	}
+	if err := c.pullModule(ctx, pythonCliWrapper, image); err != nil {
 		return nil, err
 	}
 
-	stdin, stdout, err := c.pythonCliWrapper.Deploy(image)
-
+	stdin, stdout, err := pythonCliWrapper.Deploy(image)
 	if err != nil {
 		return nil, err
 	}
 
 	cliPlugin := CliPlugin{
-		wrapper:        c.pythonCliWrapper,
+		wrapper:        pythonCliWrapper,
 		containerImage: image,
 		config:         c.config,
 		stdin:          stdin,
@@ -36,9 +40,9 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	return &cliPlugin, nil
 }
 
-func (c *Connector) pullModule(_ context.Context, fullModuleName string) error {
+func (c *Connector) pullModule(_ context.Context, pythonCliWrapper cliwrapper.CliWrapper, fullModuleName string) error {
 	c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
-	imageExists, err := c.pythonCliWrapper.ModuleExists(fullModuleName)
+	imageExists, err := pythonCliWrapper.ModuleExists(fullModuleName)
 	if err != nil {
 		return err
 	}
@@ -49,7 +53,7 @@ func (c *Connector) pullModule(_ context.Context, fullModuleName string) error {
 	} else if *imageExists && c.config.ModulePullPolicy == ModulePullPolicyAlways {
 		// if the module exists but the policy is to pull always
 		// deletes the module venv path and the module is pulled again
-		err := c.pythonCliWrapper.RemoveImage(fullModuleName)
+		err := pythonCliWrapper.RemoveImage(fullModuleName)
 		if err != nil {
 			return err
 		}
@@ -57,7 +61,7 @@ func (c *Connector) pullModule(_ context.Context, fullModuleName string) error {
 	}
 
 	c.logger.Debugf("pulling module: %s", fullModuleName)
-	if err := c.pythonCliWrapper.PullModule(fullModuleName); err != nil {
+	if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
 		return err
 	}
 

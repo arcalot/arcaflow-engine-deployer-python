@@ -9,7 +9,7 @@ import (
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	"go.flow.arcalot.io/pythondeployer"
-	"strconv"
+	"sync"
 	"testing"
 )
 
@@ -31,7 +31,7 @@ var inOutConfigGitPullIfNotPresent = `
 
 func TestRunStepGit(t *testing.T) {
 	moduleName := "arcaflow-plugin-example@git+https://github.com/arcalot/arcaflow-plugin-example.git"
-	connector, _ := getConnector(t, inOutConfigGitPullAlways, nil)
+	connector, _ := getConnector(t, inOutConfigGitPullIfNotPresent, nil)
 	OutputID, OutputData, Error := RunStep(t, connector, moduleName)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
@@ -127,7 +127,7 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
 }
 
-func TestDeployConcurrent_Connectors(t *testing.T) {
+func TestDeployConcurrent_ConnectorsAndPlugins(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
 	rootDir := "/tmp"
 	var serializedConfig any
@@ -145,15 +145,25 @@ func TestDeployConcurrent_Connectors(t *testing.T) {
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
 
-	for index := range [2]int{} {
+	const n_connectors = 10
+	const n_plugins = 3
+	wg := &sync.WaitGroup{}
+	wg.Add(n_connectors * n_plugins)
 
-		t.Run(strconv.Itoa(index), func(t *testing.T) {
-			t.Parallel()
+	for j := 0; j < n_connectors; j++ {
+		go func() {
 			c, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
 			assert.NoError(t, err)
-			p, err := c.Deploy(context.Background(), moduleName)
-			assert.NoError(t, err)
-			assert.NoError(t, p.Close())
-		})
+			for k := 0; k < n_plugins; k++ {
+				go func() {
+					p, err := c.Deploy(context.Background(), moduleName)
+					assert.NoError(t, err)
+					assert.NoError(t, p.Close())
+					wg.Done()
+				}()
+			}
+		}()
 	}
+
+	wg.Wait()
 }
