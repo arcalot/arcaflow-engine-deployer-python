@@ -158,7 +158,6 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	if err != nil {
 		return nil, nil, err
 	}
-
 	if p.stdErrBuff.Len() > 0 {
 		return nil, nil, fmt.Errorf("python process stderr already has content '%s'", p.stdErrBuff.String())
 	}
@@ -166,24 +165,26 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	if err != nil {
 		return nil, nil, fmt.Errorf("error starting python process (%w)", err)
 	}
-	//if err := p.deployCommand.Start(); err != nil || p.stdErrBuff.Len() > 0 {
-	//	return nil, nil, fmt.Errorf("error while attempting to run python stderr: '%s', err: '%s'", p.stdErrBuff.String(), err.Error())
-	//}
 	return stdin, stdout, nil
 }
 
 func (p *cliWrapper) KillAndClean() error {
-	if p.stdErrBuff.Len() > 0 {
-		p.logger.Errorf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
-	} else {
-		p.logger.Infof("stderr empty")
-	}
 	p.logger.Infof("killing config process with pid %d", p.deployCommand.Process.Pid)
-	err := p.deployCommand.Process.Kill()
+
+	// even if this error was non-nil, we would not handle it differently
+	_ = p.deployCommand.Process.Kill()
+
+	_, err := p.deployCommand.Process.Wait()
 	if err != nil {
 		return err
 	}
-	return nil
+
+	if p.stdErrBuff.Len() > 0 {
+		p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
+	} else {
+		p.logger.Infof("stderr empty")
+	}
+	return err
 }
 
 func (p *cliWrapper) RemoveImage(fullModuleName string) error {
