@@ -15,7 +15,6 @@ import (
 
 type cliWrapper struct {
 	pythonFullPath string
-	connectorDir   string
 	pluginDir      string
 	deployCommand  *exec.Cmd
 	logger         log.Logger

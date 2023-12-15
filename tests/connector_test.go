@@ -15,13 +15,6 @@ import (
 
 const examplePluginNickname string = "pythonuser"
 
-var inOutConfigGitPullAlways = `
-{
-	"workdir":"/tmp",
-	"modulePullPolicy":"Always"
-}
-`
-
 var inOutConfigGitPullIfNotPresent = `
 {
 	"workdir":"/tmp",
@@ -87,8 +80,7 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string) (str
 func TestDeployConcurrent_ConnectorsAndPlugins(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@9b35e855163319963bcc2dbe940a70031a7887c6"
 	rootDir := "/tmp"
-	var serializedConfig any
-	serializedConfig = map[string]any{
+	serializedConfig := map[string]any{
 		"workdir":          rootDir,
 		"modulePullPolicy": "Always",
 	}
