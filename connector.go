@@ -5,12 +5,16 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"sync"
 )
 
 type Connector struct {
 	config        *Config
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
+	venv          string
+	pulled        bool
+	lock          *sync.Mutex
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
@@ -19,9 +23,18 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	if err != nil {
 		return nil, err
 	}
-	if err := c.pullModule(ctx, pythonCliWrapper, image); err != nil {
-		return nil, err
+
+	c.lock.Lock()
+	if !c.pulled {
+		err := c.pull(ctx, pythonCliWrapper, image)
+		if err != nil {
+			return nil, err
+		}
 	}
+	c.lock.Unlock()
+	//if err := c.pullModule(ctx, pythonCliWrapper, image); err != nil {
+	//	return nil, err
+	//}
 
 	stdin, stdout, err := pythonCliWrapper.Deploy(image)
 	if err != nil {
@@ -38,6 +51,16 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	}
 
 	return &cliPlugin, nil
+}
+
+func (c *Connector) pull(_ context.Context, pythonCliWrapper cliwrapper.CliWrapper, fullModuleName string) error {
+	c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
+	c.logger.Debugf("pulling module: %s", fullModuleName)
+	if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
+		return err
+	}
+	c.pulled = true
+	return nil
 }
 
 func (c *Connector) pullModule(_ context.Context, pythonCliWrapper cliwrapper.CliWrapper, fullModuleName string) error {
