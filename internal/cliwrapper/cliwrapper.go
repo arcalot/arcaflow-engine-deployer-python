@@ -149,8 +149,8 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	if err := os.MkdirAll(*modulePath, os.ModePerm); err != nil {
 		return err
 	}
-	pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
-	//pipPath := filepath.Join(*modulePath, "venv/bin/pip")
+	//pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
+	pipPath := filepath.Join(*modulePath, "venv/bin/pip")
 
 	// TODO add issue to fix this bug
 	// if the user puts in an incorrect repo name

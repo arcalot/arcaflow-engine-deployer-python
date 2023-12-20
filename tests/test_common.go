@@ -45,23 +45,6 @@ func randString(n int) string {
 	return string(b)
 }
 
-//func removeModuleIfExists(module string, python wrapper.CliWrapper, t *testing.T) {
-//	modulePath, err := python.GetModulePath(module)
-//	assert.Nil(t, err)
-//	if _, err := os.Stat(*modulePath); !os.IsNotExist(err) {
-//		os.RemoveAll(*modulePath)
-//	}
-//}
-
-//func pullModule(python wrapper.CliWrapper, module string, workDir string, t *testing.T) error {
-//	removeModuleIfExists(module, python, t)
-//	err := python.PullModule(module)
-//	if err != nil {
-//		return err
-//	}
-//	return nil
-//}
-
 func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *pythondeployer.Config) {
 	var serializedConfig any
 	if err := json.Unmarshal([]byte(configJSON), &serializedConfig); err != nil {
