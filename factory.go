@@ -50,16 +50,12 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 		return nil, err
 	}
 
-	venv, err := cliwrapper.Venv(workdir, pythonPath, logger)
-	if err != nil {
-		return nil, err
-	}
 	return &Connector{
 		config:        config,
 		logger:        logger,
 		pythonFactory: pythonFactory,
-		venv:          venv,
 		lock:          &sync.Mutex{},
+		venvs:         make(map[string]struct{}),
 	}, nil
 }
 

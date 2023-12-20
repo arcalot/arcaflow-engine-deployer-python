@@ -134,15 +134,16 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err := os.MkdirAll(*modulePath, os.ModePerm); err != nil {
 		return err
 	}
-	//pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
-	pipPath := filepath.Join(p.connectorDir, "venv/bin/pip")
+	pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
+	//pipPath := filepath.Join(p.connectorDir, "venv/bin/pip")
 
+	// TODO add issue to fix this bug
+	// if the user puts in an incorrect repo name
+	// it will hang when the command runs
 	cmdPip := exec.Command(pipPath, "install", *module)
 	var cmdPipOut bytes.Buffer
 	cmdPip.Stderr = &cmdPipOut
 
-	// if the user puts in an incorrect repo name
-	// it will hang here
 	if err := cmdPip.Run(); err != nil {
 		return fmt.Errorf("error while running pip. stderr: '%s', err: '%s'", cmdPipOut.String(), err)
 	} else if cmdPipOut.Len() > 0 {
@@ -157,12 +158,12 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 
-	//venvPath, err := p.GetModulePath(fullModuleName)
-	//if err != nil {
-	//	return nil, nil, err
-	//}
-	//venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
-	venvPython := filepath.Join(p.connectorDir, "venv/bin/python")
+	venvPath, err := p.GetModulePath(fullModuleName)
+	if err != nil {
+		return nil, nil, err
+	}
+	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
+	//venvPython := filepath.Join(p.connectorDir, "venv/bin/python")
 
 	args := []string{"-m"}
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
@@ -223,15 +224,19 @@ func (p *cliWrapper) RemoveImage(fullModuleName string) error {
 	return nil
 }
 
-func Venv(rootDir string, pythonFullPath string, logger log.Logger) (string, error) {
-	venv_path := filepath.Join(rootDir, "venv")
-	cmdCreateVenv := exec.Command(pythonFullPath, "-m", "venv", venv_path)
+func (p *cliWrapper) Venv(fullModuleName string) (string, error) {
+	modulePath, err := p.GetModulePath(fullModuleName)
+	if err != nil {
+		return "", err
+	}
+	venv_path := filepath.Join(*modulePath, "venv")
+	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venv_path)
 	var cmdCreateOut bytes.Buffer
 	cmdCreateVenv.Stderr = &cmdCreateOut
 	if err := cmdCreateVenv.Run(); err != nil {
 		return "", fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
 	} else if cmdCreateOut.Len() > 0 {
-		logger.Warningf("Python deployer venv command had stderr output: %s", cmdCreateOut.String())
+		p.logger.Warningf("Python deployer venv command had stderr output: %s", cmdCreateOut.String())
 	}
 	return venv_path, nil
 }

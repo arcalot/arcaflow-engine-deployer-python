@@ -11,4 +11,5 @@ type CliWrapper interface {
 	KillAndClean() error
 	GetModulePath(fullModuleName string) (*string, error)
 	RemoveImage(fullModuleName string) error
+	Venv(fullModuleName string) (string, error)
 }
