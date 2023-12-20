@@ -49,7 +49,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 	c.lock.Lock()
 	_, pulled := c.venvs[fullModuleName]
 	if !pulled {
-		_, err := pythonCliWrapper.Venv(fullModuleName)
+		err := pythonCliWrapper.Venv(fullModuleName)
 		if err != nil {
 			return err
 		}

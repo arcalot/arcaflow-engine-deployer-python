@@ -174,11 +174,11 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 	err = p.deployCommand.Start()
+	if p.stdErrBuff.Len() > 0 {
+		p.logger.Warningf("python process stderr already has content '%s'", p.stdErrBuff.String())
+	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("error starting python process (%w)", err)
-	}
-	if p.stdErrBuff.Len() > 0 {
-		return nil, nil, fmt.Errorf("python process stderr already has content '%s'", p.stdErrBuff.String())
 	}
 	return stdin, stdout, nil
 }
@@ -193,28 +193,25 @@ func (p *cliWrapper) KillAndClean() error {
 	if err != nil {
 		return err
 	}
-
 	if p.stdErrBuff.Len() > 0 {
 		p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
-	} else {
-		p.logger.Infof("stderr empty")
 	}
-	return err
+	return nil
 }
 
-func (p *cliWrapper) Venv(fullModuleName string) (string, error) {
+func (p *cliWrapper) Venv(fullModuleName string) error {
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
-		return "", err
+		return err
 	}
 	venv_path := filepath.Join(*modulePath, "venv")
 	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venv_path)
 	var cmdCreateOut bytes.Buffer
 	cmdCreateVenv.Stderr = &cmdCreateOut
 	if err := cmdCreateVenv.Run(); err != nil {
-		return "", fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
+		return fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
 	} else if cmdCreateOut.Len() > 0 {
 		p.logger.Warningf("Python deployer venv command had stderr output: %s", cmdCreateOut.String())
 	}
-	return venv_path, nil
+	return nil
 }
