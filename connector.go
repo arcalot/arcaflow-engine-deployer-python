@@ -56,20 +56,11 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 		c.venvs[fullModuleName] = struct{}{}
 		c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
 		c.logger.Debugf("pulling module: %s", fullModuleName)
-		if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
+		if err := pythonCliWrapper.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
 			return err
 		}
 	}
 	c.lock.Unlock()
-	return nil
-}
-
-func (c *Connector) pull(_ context.Context, pythonCliWrapper cliwrapper.CliWrapper, fullModuleName string) error {
-	c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
-	c.logger.Debugf("pulling module: %s", fullModuleName)
-	if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
-		return err
-	}
 	return nil
 }
 
@@ -94,7 +85,7 @@ func (c *Connector) pullModule(_ context.Context, pythonCliWrapper cliwrapper.Cl
 	}
 
 	c.logger.Debugf("pulling module: %s", fullModuleName)
-	if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
+	if err := pythonCliWrapper.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
 		return err
 	}
 

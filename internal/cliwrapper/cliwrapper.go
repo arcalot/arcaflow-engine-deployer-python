@@ -19,6 +19,7 @@ type cliWrapper struct {
 	pythonFullPath string
 	pluginDir      string
 	connectorDir   string
+	pullPolicy     string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     *bufferThreadSafe
@@ -123,7 +124,13 @@ func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
 	return &moduleExists, nil
 }
 
-func (p *cliWrapper) PullModule(fullModuleName string) error {
+func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
+	pipInstallArgs := []string{"install"}
+
+	if pullPolicy == "Always" {
+		pipInstallArgs = append(pipInstallArgs, "--force-reinstall")
+	}
+
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
 		return err
@@ -132,6 +139,8 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err != nil {
 		return err
 	}
+	pipInstallArgs = append(pipInstallArgs, *module)
+
 	// create module path
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
@@ -141,12 +150,12 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 		return err
 	}
 	pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
-	//pipPath := filepath.Join(p.connectorDir, "venv/bin/pip")
+	//pipPath := filepath.Join(*modulePath, "venv/bin/pip")
 
 	// TODO add issue to fix this bug
 	// if the user puts in an incorrect repo name
 	// it will hang when the command runs
-	cmdPip := exec.Command(pipPath, "install", *module)
+	cmdPip := exec.Command(pipPath, pipInstallArgs...)
 	var cmdPipOut bytes.Buffer
 	cmdPip.Stderr = &cmdPipOut
 
@@ -169,8 +178,6 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
-	//venvPython := filepath.Join(p.connectorDir, "venv/bin/python")
-
 	args := []string{"-m"}
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName)
