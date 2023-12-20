@@ -21,7 +21,7 @@ type cliWrapper struct {
 	connectorDir   string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
-	stdErrBuff     bufferThreadSafe
+	stdErrBuff     *bufferThreadSafe
 }
 
 type bufferThreadSafe struct {
@@ -47,6 +47,12 @@ func (b *bufferThreadSafe) String() string {
 	return b.b.String()
 }
 
+func (b *bufferThreadSafe) Reset() {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	b.b.Reset()
+}
+
 const RunnableClassifier string = "Arcaflow :: Python Deployer :: Runnable"
 
 func NewCliWrapper(
@@ -60,7 +66,7 @@ func NewCliWrapper(
 		logger:         logger,
 		connectorDir:   connectorDir,
 		pluginDir:      workDir,
-		stdErrBuff:     bufferThreadSafe{bytes.Buffer{}, &sync.Mutex{}},
+		stdErrBuff:     &bufferThreadSafe{bytes.Buffer{}, &sync.Mutex{}},
 	}
 }
 
@@ -171,7 +177,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	args = append(args, "--atp")
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
-	p.deployCommand.Stderr = &p.stdErrBuff
+	p.deployCommand.Stderr = p.stdErrBuff
 	p.deployCommand.Dir = p.pluginDir
 
 	stdin, err := p.deployCommand.StdinPipe()
