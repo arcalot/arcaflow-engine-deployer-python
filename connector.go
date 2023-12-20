@@ -13,7 +13,6 @@ type Connector struct {
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
 	venvs         map[string]struct{}
-	pulled        bool
 	lock          *sync.Mutex
 }
 
@@ -24,23 +23,10 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 		return nil, err
 	}
 
-	c.lock.Lock()
-	_, pulled := c.venvs[image]
-	if !pulled {
-		_, err := pythonCliWrapper.Venv(image)
-		if err != nil {
-			return nil, err
-		}
-		c.venvs[image] = struct{}{}
-		err = c.pull(ctx, pythonCliWrapper, image)
-		if err != nil {
-			return nil, err
-		}
+	err2 := c.pullMod(ctx, image, pythonCliWrapper)
+	if err2 != nil {
+		return nil, err2
 	}
-	c.lock.Unlock()
-	//if err := c.pullModule(ctx, pythonCliWrapper, image); err != nil {
-	//	return nil, err
-	//}
 
 	stdin, stdout, err := pythonCliWrapper.Deploy(image)
 	if err != nil {
@@ -59,13 +45,31 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	return &cliPlugin, nil
 }
 
+func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliWrapper cliwrapper.CliWrapper) error {
+	c.lock.Lock()
+	_, pulled := c.venvs[fullModuleName]
+	if !pulled {
+		_, err := pythonCliWrapper.Venv(fullModuleName)
+		if err != nil {
+			return err
+		}
+		c.venvs[fullModuleName] = struct{}{}
+		c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
+		c.logger.Debugf("pulling module: %s", fullModuleName)
+		if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
+			return err
+		}
+	}
+	c.lock.Unlock()
+	return nil
+}
+
 func (c *Connector) pull(_ context.Context, pythonCliWrapper cliwrapper.CliWrapper, fullModuleName string) error {
 	c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
 	c.logger.Debugf("pulling module: %s", fullModuleName)
 	if err := pythonCliWrapper.PullModule(fullModuleName); err != nil {
 		return err
 	}
-	c.pulled = true
 	return nil
 }
 

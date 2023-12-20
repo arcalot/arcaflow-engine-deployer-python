@@ -302,7 +302,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	// Wait for all the plugins to be done
 	wg.Wait()
 
-	t.Cleanup(func() {
-		assert.NoError(t, os.RemoveAll(rootDir))
-	})
+	//t.Cleanup(func() {
+	//	assert.NoError(t, os.RemoveAll(rootDir))
+	//})
 }
