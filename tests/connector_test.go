@@ -122,7 +122,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	rootDir := "/tmp/multi-module"
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
-		"modulePullPolicy": "Always",
+		"modulePullPolicy": "IfNotPresent",
 	}
 
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
