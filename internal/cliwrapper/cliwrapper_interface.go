@@ -5,11 +5,9 @@ import (
 )
 
 type CliWrapper interface {
-	ModuleExists(fullModuleName string) (*bool, error)
-	PullModule(fullModuleName string) error
+	PullModule(fullModuleName string, pullPolicy string) error
 	Deploy(fullModuleName string) (io.WriteCloser, io.ReadCloser, error)
 	KillAndClean() error
 	GetModulePath(fullModuleName string) (*string, error)
-	RemoveImage(fullModuleName string) error
-	Venv(fullModuleName string) (string, error)
+	Venv(fullModuleName string) error
 }

@@ -7,7 +7,6 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	pythondeployer "go.flow.arcalot.io/pythondeployer"
-	wrapper "go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -44,23 +43,6 @@ func randString(n int) string {
 		b[i] = chars[rand.Intn(len(chars))]
 	}
 	return string(b)
-}
-
-func removeModuleIfExists(module string, python wrapper.CliWrapper, t *testing.T) {
-	modulePath, err := python.GetModulePath(module)
-	assert.Nil(t, err)
-	if _, err := os.Stat(*modulePath); !os.IsNotExist(err) {
-		os.RemoveAll(*modulePath)
-	}
-}
-
-func pullModule(python wrapper.CliWrapper, module string, workDir string, t *testing.T) error {
-	removeModuleIfExists(module, python, t)
-	err := python.PullModule(module)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *pythondeployer.Config) {

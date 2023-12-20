@@ -7,7 +7,6 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -96,34 +95,22 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	//site_pkgs := filepath.Join("venv", "lib", "python3.9", "site-packages")
 	modulePath := ""
 	if pythonModule.ModuleVersion != nil {
 		modulePath = fmt.Sprintf("%s/%s_%s", p.connectorDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
 	} else {
 		modulePath = fmt.Sprintf("%s/%s_latest", p.connectorDir, *pythonModule.ModuleName)
 	}
-	//modulePath = filepath.Join(p.connectorDir)
 	return &modulePath, err
 }
 
-func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
-	moduleExists := false
-	modulePath, err := p.GetModulePath(fullModuleName)
-	if err != nil {
-		return nil, err
+func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
+	pipInstallArgs := []string{"install"}
+
+	if pullPolicy == "Always" {
+		pipInstallArgs = append(pipInstallArgs, "--force-reinstall")
 	}
 
-	if _, err := os.Stat(*modulePath); os.IsNotExist(err) {
-		// false
-		return &moduleExists, nil
-	}
-
-	moduleExists = true
-	return &moduleExists, nil
-}
-
-func (p *cliWrapper) PullModule(fullModuleName string) error {
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
 		return err
@@ -132,21 +119,19 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err != nil {
 		return err
 	}
-	// create module path
+	pipInstallArgs = append(pipInstallArgs, *module)
+
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(*modulePath, os.ModePerm); err != nil {
-		return err
-	}
-	pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
-	//pipPath := filepath.Join(p.connectorDir, "venv/bin/pip")
+
+	pipPath := filepath.Join(*modulePath, "venv/bin/pip")
 
 	// TODO add issue to fix this bug
 	// if the user puts in an incorrect repo name
 	// it will hang when the command runs
-	cmdPip := exec.Command(pipPath, "install", *module)
+	cmdPip := exec.Command(pipPath, pipInstallArgs...)
 	var cmdPipOut bytes.Buffer
 	cmdPip.Stderr = &cmdPipOut
 
@@ -164,20 +149,20 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 
-	venvPath, err := p.GetModulePath(fullModuleName)
+	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
 		return nil, nil, err
 	}
-	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
-	//venvPython := filepath.Join(p.connectorDir, "venv/bin/python")
-
+	venvPython := filepath.Join(*modulePath, "venv/bin/python")
 	args := []string{"-m"}
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
-	args = append(args, moduleInvokableName)
-	args = append(args, "--atp")
+	args = append(args, moduleInvokableName, "--atp")
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
 	p.deployCommand.Stderr = p.stdErrBuff
+
+	// execute plugin in its own directory in case the plugin needs
+	// to write to its current working directory
 	p.deployCommand.Dir = p.pluginDir
 
 	stdin, err := p.deployCommand.StdinPipe()
@@ -189,11 +174,11 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 	err = p.deployCommand.Start()
+	if p.stdErrBuff.Len() > 0 {
+		p.logger.Warningf("python process stderr already has content '%s'", p.stdErrBuff.String())
+	}
 	if err != nil {
 		return nil, nil, fmt.Errorf("error starting python process (%w)", err)
-	}
-	if p.stdErrBuff.Len() > 0 {
-		return nil, nil, fmt.Errorf("python process stderr already has content '%s'", p.stdErrBuff.String())
 	}
 	return stdin, stdout, nil
 }
@@ -208,41 +193,25 @@ func (p *cliWrapper) KillAndClean() error {
 	if err != nil {
 		return err
 	}
-
 	if p.stdErrBuff.Len() > 0 {
 		p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
-	} else {
-		p.logger.Infof("stderr empty")
-	}
-	return err
-}
-
-func (p *cliWrapper) RemoveImage(fullModuleName string) error {
-	modulePath, err := p.GetModulePath(fullModuleName)
-	if err != nil {
-		return err
-	}
-
-	err = os.RemoveAll(*modulePath)
-	if err != nil {
-		return err
 	}
 	return nil
 }
 
-func (p *cliWrapper) Venv(fullModuleName string) (string, error) {
+func (p *cliWrapper) Venv(fullModuleName string) error {
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
-		return "", err
+		return err
 	}
 	venv_path := filepath.Join(*modulePath, "venv")
 	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venv_path)
 	var cmdCreateOut bytes.Buffer
 	cmdCreateVenv.Stderr = &cmdCreateOut
 	if err := cmdCreateVenv.Run(); err != nil {
-		return "", fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
+		return fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
 	} else if cmdCreateOut.Len() > 0 {
 		p.logger.Warningf("Python deployer venv command had stderr output: %s", cmdCreateOut.String())
 	}
-	return venv_path, nil
+	return nil
 }

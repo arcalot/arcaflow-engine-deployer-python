@@ -9,7 +9,6 @@ import (
 type CliPlugin struct {
 	wrapper        cliwrapper.CliWrapper
 	containerImage string
-	workdir        string
 	config         *Config
 	logger         log.Logger
 	stdin          io.WriteCloser

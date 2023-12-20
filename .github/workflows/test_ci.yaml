@@ -39,6 +39,8 @@ jobs:
             ~/.cache/go-build
           key: go-test-${{ hashFiles('**/go.sum') }}
           restore-keys: go-test-
+      - name: install fio to test with fio plugin
+        run: sudo apt-get -y install fio
       - name: Run go test
         run: |
           which python
