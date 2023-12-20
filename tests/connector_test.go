@@ -87,7 +87,7 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string, step
 // connectors concurrently, and that those connectors can deploy
 // plugins concurrently.
 func TestDeployConcurrent_ConnectorsAndPlugins(t *testing.T) {
-	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@4fd43570277995f89a5f17fe4beb4374edf44d68"
+	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@52d1a9559c60a615dbd97114572f16d70fa30b1b"
 	rootDir := "/tmp/template"
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
@@ -211,32 +211,55 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithFilesystemSideEffects(t *testi
 	})
 }
 
-// add a test where 1 deployer deploys 3 different python plugins
+// add a test where 1 deployer deploys at least 3 different python plugins
 func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T) {
-	moduleName := "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191"
-	rootDir := "/tmp/fio"
+	type TestModule struct {
+		location string
+		stepID   string
+		input    map[string]any
+	}
+	testModules := map[string]TestModule{
+		"fio": {
+			stepID:   "workload",
+			location: "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191",
+			input: map[string]any{
+				"name":    "poisson-rate-submit",
+				"cleanup": "true",
+				"params": map[string]any{
+					"size":           "500KiB",
+					"readwrite":      "randrw",
+					"ioengine":       "sync",
+					"iodepth":        32,
+					"io_submit_mode": "inline",
+					"rate_iops":      50,
+					"rate_process":   "poisson",
+					"buffered":       0,
+				},
+			},
+		},
+		"template": {
+			stepID:   "hello-world",
+			location: "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@52d1a9559c60a615dbd97114572f16d70fa30b1b",
+			input: map[string]any{
+				"name": "arca lot",
+			},
+		},
+		"wait": {
+			stepID:   "wait",
+			location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
+			input: map[string]any{
+				"seconds": "0.5",
+			},
+		},
+	}
+
+	rootDir := "/tmp/multi-module"
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
 		"modulePullPolicy": "IfNotPresent",
 	}
 
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
-
-	stepID := "workload"
-	input := map[string]any{
-		"name":    "poisson-rate-submit",
-		"cleanup": "true",
-		"params": map[string]any{
-			"size":           "500KiB",
-			"readwrite":      "randrw",
-			"ioengine":       "sync",
-			"iodepth":        32,
-			"io_submit_mode": "inline",
-			"rate_iops":      50,
-			"rate_process":   "poisson",
-			"buffered":       0,
-		},
-	}
 
 	factory := pythondeployer.NewFactory()
 	deployerSchema := factory.ConfigurationSchema()
@@ -249,29 +272,32 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 
 	// Choose how many connectors and plugins to make
 	const n_connectors = 3
-	const n_plugins = 3
+	const n_plugin_copies = 3
 	wg := &sync.WaitGroup{}
-	wg.Add(n_connectors * n_plugins)
+	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
 
 	// Test for issues that might occur during concurrent creation of connectors
 	// and deployment of plugins
 	// Make a goroutine for each connector
 	for j := 0; j < n_connectors; j++ {
-		go func() {
-			connector, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
-			assert.NoError(t, err)
+		connector_, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+		assert.NoError(t, err)
+		go func(connector deployer.Connector) {
 
-			// Make a goroutine for each plugin
-			for k := 0; k < n_plugins; k++ {
-				go func() {
-					output_id, output_data, err := RunStep(t, connector, moduleName, stepID, input)
-					assert.NoError(t, err)
-					assert.Equals(t, output_id, "success")
-					assert.NotNil(t, output_data)
-					wg.Done()
-				}()
+			for k := 0; k < n_plugin_copies; k++ {
+				for _, testModule_ := range testModules {
+					go func(testModule TestModule) {
+						output_id, output_data, err := RunStep(
+							t, connector, testModule.location, testModule.stepID, testModule.input)
+						assert.NoError(t, err)
+						assert.Equals(t, output_id, "success")
+						assert.NotNil(t, output_data)
+						wg.Done()
+					}(testModule_)
+				}
 			}
-		}()
+
+		}(connector_)
 	}
 	// Wait for all the plugins to be done
 	wg.Wait()
