@@ -7,7 +7,6 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"io"
-	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -19,7 +18,6 @@ type cliWrapper struct {
 	pythonFullPath string
 	pluginDir      string
 	connectorDir   string
-	pullPolicy     string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     *bufferThreadSafe
@@ -97,31 +95,13 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	//site_pkgs := filepath.Join("venv", "lib", "python3.9", "site-packages")
 	modulePath := ""
 	if pythonModule.ModuleVersion != nil {
 		modulePath = fmt.Sprintf("%s/%s_%s", p.connectorDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
 	} else {
 		modulePath = fmt.Sprintf("%s/%s_latest", p.connectorDir, *pythonModule.ModuleName)
 	}
-	//modulePath = filepath.Join(p.connectorDir)
 	return &modulePath, err
-}
-
-func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
-	moduleExists := false
-	modulePath, err := p.GetModulePath(fullModuleName)
-	if err != nil {
-		return nil, err
-	}
-
-	if _, err := os.Stat(*modulePath); os.IsNotExist(err) {
-		// false
-		return &moduleExists, nil
-	}
-
-	moduleExists = true
-	return &moduleExists, nil
 }
 
 func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
@@ -141,15 +121,11 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	}
 	pipInstallArgs = append(pipInstallArgs, *module)
 
-	// create module path
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(*modulePath, os.ModePerm); err != nil {
-		return err
-	}
-	//pipPath := fmt.Sprintf("%s/venv/bin/pip", *modulePath)
+
 	pipPath := filepath.Join(*modulePath, "venv/bin/pip")
 
 	// TODO add issue to fix this bug
@@ -173,18 +149,20 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 		return nil, nil, err
 	}
 
-	venvPath, err := p.GetModulePath(fullModuleName)
+	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
 		return nil, nil, err
 	}
-	venvPython := fmt.Sprintf("%s/venv/bin/python", *venvPath)
+	venvPython := filepath.Join(*modulePath, "venv/bin/python")
 	args := []string{"-m"}
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
-	args = append(args, moduleInvokableName)
-	args = append(args, "--atp")
+	args = append(args, moduleInvokableName, "--atp")
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
 	p.deployCommand.Stderr = p.stdErrBuff
+
+	// execute plugin in its own directory in case the plugin needs
+	// to write to its current working directory
 	p.deployCommand.Dir = p.pluginDir
 
 	stdin, err := p.deployCommand.StdinPipe()
@@ -222,19 +200,6 @@ func (p *cliWrapper) KillAndClean() error {
 		p.logger.Infof("stderr empty")
 	}
 	return err
-}
-
-func (p *cliWrapper) RemoveImage(fullModuleName string) error {
-	modulePath, err := p.GetModulePath(fullModuleName)
-	if err != nil {
-		return err
-	}
-
-	err = os.RemoveAll(*modulePath)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (p *cliWrapper) Venv(fullModuleName string) (string, error) {
