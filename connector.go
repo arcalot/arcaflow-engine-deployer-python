@@ -12,7 +12,7 @@ type Connector struct {
 	config        *Config
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
-	venv          string
+	venvs         map[string]struct{}
 	pulled        bool
 	lock          *sync.Mutex
 }
@@ -25,8 +25,14 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	}
 
 	c.lock.Lock()
-	if !c.pulled {
-		err := c.pull(ctx, pythonCliWrapper, image)
+	_, pulled := c.venvs[image]
+	if !pulled {
+		_, err := pythonCliWrapper.Venv(image)
+		if err != nil {
+			return nil, err
+		}
+		c.venvs[image] = struct{}{}
+		err = c.pull(ctx, pythonCliWrapper, image)
 		if err != nil {
 			return nil, err
 		}
