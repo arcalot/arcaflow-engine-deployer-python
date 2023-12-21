@@ -25,11 +25,12 @@ var inOutConfigGitPullIfNotPresent = `
 
 func TestRunStepGit(t *testing.T) {
 	moduleName := "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@52d1a9559c60a615dbd97114572f16d70fa30b1b"
-	connector, _ := getConnector(t, inOutConfigGitPullIfNotPresent, nil)
 	stepID := "hello-world"
 	input := map[string]any{
 		"name": examplePluginNickname,
 	}
+
+	connector, _ := getConnector(t, inOutConfigGitPullIfNotPresent, nil)
 	OutputID, OutputData, Error := RunStep(t, connector, moduleName, stepID, input)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
@@ -142,6 +143,8 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	wg := &sync.WaitGroup{}
 	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
 
+	logger := log.NewTestLogger(t)
+
 	// Test for issues that might occur during concurrent creation of connectors
 	// and deployment of plugins
 	// Make a goroutine for each connector
@@ -153,12 +156,19 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 			for k := 0; k < n_plugin_copies; k++ {
 				for _, testModule_ := range testModules {
 					go func(testModule TestModule) {
+						defer wg.Done()
+
 						output_id, output_data, err := RunStep(
 							t, connector, testModule.location, testModule.stepID, testModule.input)
 						assert.NoError(t, err)
 						assert.Equals(t, output_id, "success")
-						assert.NotNil(t, output_data)
-						wg.Done()
+						assert.MapNotContainsKeyAny(t, "error", output_data.(map[any]any))
+						if output_id == "error" {
+							errorMsg, ok := output_data.(map[any]any)["error"]
+							if ok {
+								logger.Debugf("plugin error '%s'", errorMsg.(string))
+							}
+						}
 					}(testModule_)
 				}
 			}
