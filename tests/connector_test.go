@@ -84,24 +84,24 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 		input    map[string]any
 	}
 	testModules := map[string]TestModule{
-		//"fio": {
-		//	stepID:   "workload",
-		//	location: "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191",
-		//	input: map[string]any{
-		//		"name":    "poisson-rate-submit",
-		//		"cleanup": "true",
-		//		"params": map[string]any{
-		//			"size":           "500KiB",
-		//			"readwrite":      "randrw",
-		//			"ioengine":       "sync",
-		//			"iodepth":        32,
-		//			"io_submit_mode": "inline",
-		//			"rate_iops":      50,
-		//			"rate_process":   "poisson",
-		//			"buffered":       0,
-		//		},
-		//	},
-		//},
+		"fio": {
+			stepID:   "workload",
+			location: "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191",
+			input: map[string]any{
+				"name":    "poisson-rate-submit",
+				"cleanup": "true",
+				"params": map[string]any{
+					"size":           "500KiB",
+					"readwrite":      "randrw",
+					"ioengine":       "sync",
+					"iodepth":        32,
+					"io_submit_mode": "inline",
+					"rate_iops":      50,
+					"rate_process":   "poisson",
+					"buffered":       0,
+				},
+			},
+		},
 		"template": {
 			stepID:   "hello-world",
 			location: "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@52d1a9559c60a615dbd97114572f16d70fa30b1b",
@@ -109,13 +109,13 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				"name": "arca lot",
 			},
 		},
-		//"wait": {
-		//	stepID:   "wait",
-		//	location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
-		//	input: map[string]any{
-		//		"seconds": "0.5",
-		//	},
-		//},
+		"wait": {
+			stepID:   "wait",
+			location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
+			input: map[string]any{
+				"seconds": "0.5",
+			},
+		},
 	}
 
 	rootDir := "/tmp/multi-module"
