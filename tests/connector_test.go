@@ -153,11 +153,15 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 			for k := 0; k < n_plugin_copies; k++ {
 				for _, testModule_ := range testModules {
 					go func(testModule TestModule) {
-						output_id, output_data, err := RunStep(
+						output_id, output_data, err2 := RunStep(
 							t, connector, testModule.location, testModule.stepID, testModule.input)
-						assert.NoError(t, err)
+						assert.NoError(t, err2)
+						if err2 != nil {
+							fmt.Printf("run step error: %v\n", err2)
+						}
 						assert.Equals(t, output_id, "success")
 						assert.NotNil(t, output_data)
+						fmt.Printf("output data: %v\n", output_data)
 						wg.Done()
 					}(testModule_)
 				}
