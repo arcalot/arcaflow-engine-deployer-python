@@ -127,18 +127,23 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	}
 
 	pipPath := filepath.Join(*modulePath, "venv/bin/pip")
-
-	// TODO add issue to fix this bug
-	// if the user puts in an incorrect repo name
-	// it will hang when the command runs
 	cmdPip := exec.Command(pipPath, pipInstallArgs...)
-	var cmdPipOut bytes.Buffer
-	cmdPip.Stderr = &cmdPipOut
 
-	if err := cmdPip.Run(); err != nil {
-		return fmt.Errorf("error while running pip. stderr: '%s', err: '%s'", cmdPipOut.String(), err)
-	} else if cmdPipOut.Len() > 0 {
-		p.logger.Warningf("Python deployer pip command had stderr output: %s", cmdPipOut.String())
+	// Make git non-interactive, so that it never prompts for credentials.
+	// Otherwise, you can hit edge cases where git will wait for manual
+	// authentication causing pip to hang b/c pip calls `git clone` in a
+	// subprocess.
+	cmdPip.Env = append(cmdPip.Environ(), "GIT_TERMINAL_PROMPT=0")
+
+	var cmdPipStderr bytes.Buffer
+	cmdPip.Stderr = &cmdPipStderr
+
+	err = cmdPip.Run()
+	if cmdPipStderr.Len() > 0 {
+		p.logger.Warningf("pip install stderr: %s", cmdPipStderr.String())
+	}
+	if err != nil {
+		return fmt.Errorf("error pip installing '%w'", err)
 	}
 	return nil
 }
@@ -208,10 +213,12 @@ func (p *cliWrapper) Venv(fullModuleName string) error {
 	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venv_path)
 	var cmdCreateOut bytes.Buffer
 	cmdCreateVenv.Stderr = &cmdCreateOut
-	if err := cmdCreateVenv.Run(); err != nil {
-		return fmt.Errorf("error while creating venv. Stderr: '%s', err: '%s'", cmdCreateOut.String(), err)
-	} else if cmdCreateOut.Len() > 0 {
-		p.logger.Warningf("Python deployer venv command had stderr output: %s", cmdCreateOut.String())
+	err = cmdCreateVenv.Run()
+	if cmdCreateOut.Len() > 0 {
+		p.logger.Warningf("venv creation stderr %s", cmdCreateOut.String())
+	}
+	if err != nil {
+		return fmt.Errorf("error creating venv '%w'", err)
 	}
 	return nil
 }

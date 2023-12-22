@@ -13,6 +13,12 @@ import (
 	"testing"
 )
 
+type TestModule struct {
+	location string
+	stepID   string
+	input    map[string]any
+}
+
 func getPythonPath() (string, error) {
 	python3Path, errPython3 := exec.LookPath("python3")
 	if errPython3 != nil {
