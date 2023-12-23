@@ -36,7 +36,6 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	cliPlugin := CliPlugin{
 		wrapper:        pythonCliWrapper,
 		containerImage: image,
-		config:         c.config,
 		stdin:          stdin,
 		stdout:         stdout,
 		logger:         c.logger,

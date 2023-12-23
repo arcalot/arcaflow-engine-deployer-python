@@ -9,13 +9,10 @@ import (
 type CliPlugin struct {
 	wrapper        cliwrapper.CliWrapper
 	containerImage string
-	config         *Config
 	logger         log.Logger
 	stdin          io.WriteCloser
 	stdout         io.ReadCloser
 }
-
-// TODO: unwrap the whole config
 
 func (p *CliPlugin) Write(b []byte) (n int, err error) {
 	return p.stdin.Write(b)
