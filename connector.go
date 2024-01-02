@@ -33,7 +33,7 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 		return nil, err
 	}
 
-	cliPlugin := CliPlugin{
+	cliPlugin := Plugin{
 		w: *plugin_wrapper,
 	}
 
