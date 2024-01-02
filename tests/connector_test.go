@@ -93,7 +93,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				"name":    "poisson-rate-submit",
 				"cleanup": "true",
 				"params": map[string]any{
-					"size":           "500KiB",
+					"size":           "900KiB",
 					"readwrite":      "randrw",
 					"ioengine":       "sync",
 					"iodepth":        32,
@@ -123,7 +123,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	rootDir := "/tmp/multi-module"
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
-		"modulePullPolicy": "IfNotPresent",
+		"modulePullPolicy": "Always",
 	}
 
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
@@ -138,8 +138,8 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	unserializedConfig.PythonPath = pythonPath
 
 	// Choose how many connectors and plugins to make
-	const n_connectors = 3
-	const n_plugin_copies = 3
+	const n_connectors = 4
+	const n_plugin_copies = 10
 	wg := &sync.WaitGroup{}
 	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
 

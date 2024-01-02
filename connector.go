@@ -44,6 +44,9 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	return &cliPlugin, nil
 }
 
+// pullMod synchronizes the creation of Python virtual environments for Python
+// module plugins, during the concurrent instantiation of Python cli plugins,
+// so that this connector will only pull a module once if it is not present
 func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliWrapper cliwrapper.CliWrapper) error {
 	c.lock.Lock()
 	_, pulled := c.venvs[fullModuleName]

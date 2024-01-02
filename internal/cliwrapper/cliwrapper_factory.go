@@ -28,6 +28,9 @@ func NewCliWrapperFactory(pythonPath string, connectorDir string, logger log.Log
 	}, nil
 }
 
+// Create instantiates a CliWrapper by providing or creating an empty, unique
+// directory for the plugin to execute within as its current working
+// directory.
 func (f CliWrapperFactory) Create(pluginDir string, logger log.Logger) (CliWrapper, error) {
 	var workdir string
 	var err error

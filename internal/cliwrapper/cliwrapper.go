@@ -65,7 +65,9 @@ func NewCliWrapper(
 		logger:         logger,
 		connectorDir:   connectorDir,
 		pluginDir:      workDir,
-		stdErrBuff:     bufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
+		// use thread safe buffer for concurrent access to this buffer by
+		// the cli wrapper and the cli plugin
+		stdErrBuff: bufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
 	}
 }
 
@@ -95,11 +97,11 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	modulePath := ""
+	modulePath := filepath.Join(p.connectorDir, *pythonModule.ModuleName)
 	if pythonModule.ModuleVersion != nil {
-		modulePath = fmt.Sprintf("%s/%s_%s", p.connectorDir, *pythonModule.ModuleName, *pythonModule.ModuleVersion)
+		modulePath += "_" + *pythonModule.ModuleVersion
 	} else {
-		modulePath = fmt.Sprintf("%s/%s_latest", p.connectorDir, *pythonModule.ModuleName)
+		modulePath += "_latest"
 	}
 	return &modulePath, err
 }
@@ -107,6 +109,9 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
 	pipInstallArgs := []string{"install"}
 
+	// Pip's default behavior is to pull if the module is not present in the
+	// environment (i.e. IfNotPresent), so behavior is altered here when the
+	// user's pull policy is Always.
 	if pullPolicy == "Always" {
 		pipInstallArgs = append(pipInstallArgs, "--force-reinstall")
 	}
@@ -204,6 +209,8 @@ func (p *cliWrapper) KillAndClean() error {
 	return nil
 }
 
+// Venv creates a Python virtual environment for the given
+// Python module in its connector's working directory.
 func (p *cliWrapper) Venv(fullModuleName string) error {
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
