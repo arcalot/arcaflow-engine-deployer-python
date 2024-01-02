@@ -1,45 +1,25 @@
 package pythondeployer
 
 import (
-	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"io"
 )
 
 type CliPlugin struct {
-	wrapper        cliwrapper.CliWrapper
-	containerImage string
-	logger         log.Logger
-	stdin          io.WriteCloser
-	stdout         io.ReadCloser
+	w cliwrapper.CliWrapperPlugin
 }
 
 func (p *CliPlugin) Write(b []byte) (n int, err error) {
-	return p.stdin.Write(b)
+	return p.w.Write(b)
 }
 
 func (p *CliPlugin) Read(b []byte) (n int, err error) {
-	return p.stdout.Read(b)
+	return p.w.Read(b)
 }
 
 func (p *CliPlugin) Close() error {
-	if err := p.wrapper.KillAndClean(); err != nil {
-		return err
-	}
-
-	if err := p.stdin.Close(); err != nil {
-		p.logger.Errorf("failed to close stdin pipe")
-	} else {
-		p.logger.Infof("stdin pipe successfully closed")
-	}
-	if err := p.stdout.Close(); err != nil {
-		p.logger.Infof("failed to close stdout pipe")
-	} else {
-		p.logger.Infof("stdout pipe successfully closed")
-	}
-	return nil
+	return p.w.Close()
 }
 
 func (p *CliPlugin) ID() string {
-	return p.containerImage
+	return p.w.ID()
 }

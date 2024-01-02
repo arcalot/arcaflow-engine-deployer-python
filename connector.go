@@ -28,17 +28,13 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 		return nil, err2
 	}
 
-	stdin, stdout, err := pythonCliWrapper.Deploy(image)
+	plugin_wrapper, err := pythonCliWrapper.Deploy(image)
 	if err != nil {
 		return nil, err
 	}
 
 	cliPlugin := CliPlugin{
-		wrapper:        pythonCliWrapper,
-		containerImage: image,
-		stdin:          stdin,
-		stdout:         stdout,
-		logger:         c.logger,
+		w: *plugin_wrapper,
 	}
 
 	return &cliPlugin, nil
