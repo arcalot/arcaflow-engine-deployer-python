@@ -20,12 +20,12 @@ type cliWrapper struct {
 	connectorDir   string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
-	stdErrBuff     *bufferThreadSafe
+	stdErrBuff     bufferThreadSafe
 }
 
 type bufferThreadSafe struct {
 	b    bytes.Buffer
-	lock *sync.Mutex
+	lock sync.Mutex
 }
 
 func (b *bufferThreadSafe) Len() int {
@@ -65,7 +65,7 @@ func NewCliWrapper(
 		logger:         logger,
 		connectorDir:   connectorDir,
 		pluginDir:      workDir,
-		stdErrBuff:     &bufferThreadSafe{bytes.Buffer{}, &sync.Mutex{}},
+		stdErrBuff:     bufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
 	}
 }
 
@@ -164,7 +164,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 	args = append(args, moduleInvokableName, "--atp")
 
 	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
-	p.deployCommand.Stderr = p.stdErrBuff
+	p.deployCommand.Stderr = &p.stdErrBuff
 
 	// execute plugin in its own directory in case the plugin needs
 	// to write to its current working directory
