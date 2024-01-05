@@ -7,7 +7,6 @@ import (
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"os"
 	"os/exec"
-	"sync"
 	"testing"
 )
 
@@ -33,7 +32,6 @@ func GetPythonPath() (string, error) {
 // to find a nonexistent public repo instead of hanging, waiting
 // manual authentication.
 func Test_PullModule_NonexistentGitLocation(t *testing.T) {
-
 	testModule := TestModule{
 		Location: "nonexistent-repo@git+https://github.com/arcalot/nonexistent-repo.git",
 		StepID:   "wait",
@@ -42,24 +40,20 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 		},
 	}
 
+	tempdir := "/tmp/pullmodule"
+	_ = os.RemoveAll(tempdir)
+	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
+
 	pythonPath, err := GetPythonPath()
 	assert.NoError(t, err)
-	tempdir := "/tmp/pullmodule"
-	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
-	assert.NoError(t, err)
+
 	logger := log.NewTestLogger(t)
 	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, logger)
 	assert.NoError(t, wrap.Venv(testModule.Location))
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
 
-	go func() {
-		defer wg.Done()
-		err := wrap.PullModule(testModule.Location, "Always")
-		assert.Error(t, err)
-	}()
+	err = wrap.PullModule(testModule.Location, "Always")
+	assert.Error(t, err)
 
-	wg.Wait()
 	t.Cleanup(func() {
 		assert.NoError(t, os.RemoveAll(tempdir))
 	})
