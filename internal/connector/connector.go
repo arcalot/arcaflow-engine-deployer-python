@@ -13,35 +13,28 @@ import (
 )
 
 type Connector struct {
-	config        *config.Config
-	connectorDir  string
-	logger        log.Logger
-	pythonFactory cliwrapper.CliWrapperFactory
-	pythonCli     *cliwrapper.CliWrapper
-	modules       map[string]struct{}
-	lock          *sync.Mutex
+	config       *config.Config
+	connectorDir string
+	logger       log.Logger
+	pythonCli    *cliwrapper.CliWrapper
+	modules      map[string]struct{}
+	lock         *sync.Mutex
 }
 
-func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonFactory cliwrapper.CliWrapperFactory, pythonCli *cliwrapper.CliWrapper) Connector {
+func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonCli *cliwrapper.CliWrapper) Connector {
 	return Connector{
-		config:        config,
-		logger:        logger,
-		connectorDir:  connectorDir,
-		pythonFactory: pythonFactory,
-		pythonCli:     pythonCli,
-		lock:          &sync.Mutex{},
-		modules:       make(map[string]struct{}),
+		config:       config,
+		logger:       logger,
+		connectorDir: connectorDir,
+		pythonCli:    pythonCli,
+		lock:         &sync.Mutex{},
+		modules:      make(map[string]struct{}),
 	}
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
 
-	//pythonCli, err := c.pythonFactory.Create("", c.logger)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	err2 := c.pullMod(ctx, image, *c.pythonCli)
+	err2 := c.pullMod(ctx, image)
 	if err2 != nil {
 		return nil, err2
 	}
@@ -53,7 +46,6 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	}
 
 	cliPlugin := CliPlugin{
-		//wrapper:        c.pythonCli,
 		containerImage: image,
 		stdin:          stdin,
 		stdout:         stdout,
@@ -68,7 +60,7 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 // pullMod synchronizes the creation of Python virtual environments for Python
 // module plugins, during the concurrent instantiation of Python cli plugins,
 // so that this connector will only pull a module once if it is not present
-func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliWrapper cliwrapper.CliWrapper) error {
+func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
 	c.lock.Lock()
 	_, cachedPath := c.modules[fullModuleName]
 	if !cachedPath {

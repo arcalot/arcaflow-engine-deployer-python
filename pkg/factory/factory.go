@@ -70,23 +70,8 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 
 	pythonCli := cliwrapper.NewCliWrapper(pythonPath, connectorFilepath, logger)
 
-	pythonFactory, err := cliwrapper.NewCliWrapperFactory(pythonPath, connectorFilepath, logger)
-	if err != nil {
-		return nil, err
-	}
-
-	//return &connector.Connector{
-	//	config:        config,
-	//	logger:        logger,
-	//	connectorDir:  connectorFilepath,
-	//	pythonFactory: pythonFactory,
-	//	pythonCli:     &pythonCli,
-	//	lock:          &sync.Mutex{},
-	//	modules:       make(map[string]struct{}),
-	//}, nil
 	cn := connector.NewConnector(
-		config, logger, connectorFilepath,
-		pythonFactory, &pythonCli)
+		config, logger, connectorFilepath, &pythonCli)
 	return &cn, nil
 }
 
