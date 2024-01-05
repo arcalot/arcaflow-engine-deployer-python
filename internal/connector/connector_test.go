@@ -166,7 +166,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	// Choose how many connectors and plugins to make
 	const n_connectors = 4
 	const n_plugin_copies = 10
-	wg := &sync.WaitGroup{}
+	wg := sync.WaitGroup{}
 	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
 
 	logger := log.NewTestLogger(t)
