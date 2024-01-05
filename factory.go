@@ -78,7 +78,7 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 		logger:        logger,
 		connectorDir:  connectorFilepath,
 		pythonFactory: pythonFactory,
-		pythonCli:     pythonCli,
+		pythonCli:     &pythonCli,
 		lock:          &sync.Mutex{},
 		modules:       make(map[string]struct{}),
 	}, nil

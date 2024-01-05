@@ -7,7 +7,7 @@ import (
 )
 
 type CliPlugin struct {
-	wrapper        cliwrapper.CliWrapper
+	wrapper        *cliwrapper.CliWrapper
 	containerImage string
 	logger         log.Logger
 	stdin          io.WriteCloser
@@ -23,7 +23,8 @@ func (p *CliPlugin) Read(b []byte) (n int, err error) {
 }
 
 func (p *CliPlugin) Close() error {
-	if err := p.wrapper.KillAndClean(); err != nil {
+	//wrapper := *p.wrapper
+	if err := (*p.wrapper).KillAndClean(); err != nil {
 		return err
 	}
 

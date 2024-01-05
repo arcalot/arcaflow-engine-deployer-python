@@ -1,4 +1,4 @@
-package tests
+package pythondeployer
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
-	"go.flow.arcalot.io/pythondeployer"
+	"go.flow.arcalot.io/pythondeployer/tests"
 	"os"
 	"sync"
 	"testing"
@@ -31,7 +31,7 @@ func TestRunStepGit(t *testing.T) {
 		"name": examplePluginNickname,
 	}
 
-	connector, _ := getConnector(t, inOutConfigGitPullIfNotPresent, nil)
+	connector, _ := tests.GetConnector(t, inOutConfigGitPullIfNotPresent, nil)
 	OutputID, OutputData, Error := RunStep(t, connector, moduleName, stepID, input)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
@@ -132,12 +132,12 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	_ = os.RemoveAll(rootDir)
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
 
-	factory := pythondeployer.NewFactory()
+	factory := NewFactory()
 	deployerSchema := factory.ConfigurationSchema()
 	unserializedConfig, err := deployerSchema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
 
-	pythonPath, err := getPythonPath()
+	pythonPath, err := tests.GetPythonPath()
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
 

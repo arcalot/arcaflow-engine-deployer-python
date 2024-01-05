@@ -16,7 +16,7 @@ type Connector struct {
 	connectorDir  string
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
-	pythonCli     cliwrapper.CliWrapper
+	pythonCli     *cliwrapper.CliWrapper
 	modules       map[string]struct{}
 	lock          *sync.Mutex
 }
@@ -40,7 +40,7 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	}
 
 	cliPlugin := CliPlugin{
-		wrapper:        pythonCli,
+		wrapper:        c.pythonCli,
 		containerImage: image,
 		stdin:          stdin,
 		stdout:         stdout,
@@ -57,7 +57,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 	c.lock.Lock()
 	_, cachedPath := c.modules[fullModuleName]
 	if !cachedPath {
-		modulePresent, err := pythonCliWrapper.ModuleExists(fullModuleName)
+		modulePresent, err := (*c.pythonCli).ModuleExists(fullModuleName)
 		if err != nil {
 			return fmt.Errorf("error looking for python module (%w)", err)
 		}
@@ -72,7 +72,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 		// else file is not present, or our pull policy is Always, so let's go
 		c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
 		c.logger.Debugf("pulling module: %s", fullModuleName)
-		if err := pythonCliWrapper.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
+		if err := (*c.pythonCli).PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
 			return err
 		}
 		// remember we found the module if someone asks again later

@@ -6,7 +6,7 @@ import (
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
-	pythondeployer "go.flow.arcalot.io/pythondeployer"
+	"go.flow.arcalot.io/pythondeployer"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -14,12 +14,12 @@ import (
 )
 
 type TestModule struct {
-	location string
-	stepID   string
-	input    map[string]any
+	Location string
+	StepID   string
+	Input    map[string]any
 }
 
-func getPythonPath() (string, error) {
+func GetPythonPath() (string, error) {
 	python3Path, errPython3 := exec.LookPath("python3")
 	if errPython3 != nil {
 		pythonPath, errPython := exec.LookPath("python")
@@ -31,8 +31,8 @@ func getPythonPath() (string, error) {
 	return python3Path, nil
 }
 
-func createWorkdir(t *testing.T) string {
-	workdir := fmt.Sprintf("/tmp/%s", randString(10))
+func CreateWorkdir(t *testing.T) string {
+	workdir := fmt.Sprintf("/tmp/%s", RandString(10))
 	if _, err := os.Stat(workdir); !os.IsNotExist(err) {
 		err := os.RemoveAll(workdir)
 		assert.NoError(t, err)
@@ -42,7 +42,7 @@ func createWorkdir(t *testing.T) string {
 	return workdir
 }
 
-func randString(n int) string {
+func RandString(n int) string {
 	var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, n)
 	for i := range b {
@@ -51,7 +51,7 @@ func randString(n int) string {
 	return string(b)
 }
 
-func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *pythondeployer.Config) {
+func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *pythondeployer.Config) {
 	var serializedConfig any
 	if err := json.Unmarshal([]byte(configJSON), &serializedConfig); err != nil {
 		t.Fatal(err)
@@ -60,14 +60,14 @@ func getConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 	schema := factory.ConfigurationSchema()
 	unserializedConfig, err := schema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
-	pythonPath, err := getPythonPath()
+	pythonPath, err := GetPythonPath()
 	assert.NoError(t, err)
 	unserializedConfig.PythonPath = pythonPath
 	// NOTE: randomizing Workdir to avoid parallel tests to
 	// remove python folders while other tests are running
 	// causing the test to fail
 	if workdir == nil {
-		unserializedConfig.WorkDir = createWorkdir(t)
+		unserializedConfig.WorkDir = CreateWorkdir(t)
 	} else {
 		unserializedConfig.WorkDir = *workdir
 	}
