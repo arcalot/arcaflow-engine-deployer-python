@@ -19,7 +19,6 @@ type cliWrapper struct {
 	pythonFullPath string
 	connectorDir   string
 	logger         log.Logger
-	stdErrBuff     BufferThreadSafe
 }
 
 type BufferThreadSafe struct {
@@ -62,9 +61,6 @@ func NewCliWrapper(
 		pythonFullPath: pythonFullPath,
 		logger:         logger,
 		connectorDir:   connectorDir,
-		// use thread safe buffer for concurrent access to this buffer by
-		// the cli wrapper and the cli plugin
-		stdErrBuff: BufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
 	}
 }
 
@@ -187,6 +183,8 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName, "--atp")
 
+	// use thread safe buffer for concurrent access to this buffer by
+	// the cli plugin's goroutine and some other goroutine
 	stdErrBuff := BufferThreadSafe{}
 	deployCommand := exec.Command(venvPython, args...) //nolint:gosec
 	deployCommand.Stderr = &stdErrBuff

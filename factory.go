@@ -1,4 +1,4 @@
-package factory
+package arcaflow_engine_deployer_python
 
 import (
 	"fmt"
@@ -15,7 +15,6 @@ import (
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	pythonDeployerSchema "go.flow.arcalot.io/pythondeployer/pkg/schema"
 )
 
 // NewFactory creates a new factory for the Docker deployer.
@@ -36,7 +35,7 @@ func (f factory) DeploymentType() deployer.DeploymentType {
 }
 
 func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] {
-	return pythonDeployerSchema.Schema
+	return Schema
 }
 
 func (f factory) NextConnectorIndex() int {
