@@ -33,12 +33,16 @@ func NewConnector(config *config.Config, logger log.Logger, connectorDir string,
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
-	err2 := c.pullMod(ctx, image)
-	if err2 != nil {
-		return nil, err2
+	err := c.pullMod(ctx, image)
+	if err != nil {
+		return nil, err
 	}
 
 	pluginDirAbspath, err := c.CreatePluginDir("")
+	if err != nil {
+		return nil, err
+	}
+
 	stdin, stdout, deployCommand, stdErrBuff, err := c.pythonCli.Deploy(image, *pluginDirAbspath)
 	if err != nil {
 		return nil, err

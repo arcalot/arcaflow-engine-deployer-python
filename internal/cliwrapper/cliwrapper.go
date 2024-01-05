@@ -18,7 +18,6 @@ import (
 type cliWrapper struct {
 	pythonFullPath string
 	connectorDir   string
-	deployCommand  *exec.Cmd
 	logger         log.Logger
 	stdErrBuff     BufferThreadSafe
 }
