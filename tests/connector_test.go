@@ -128,6 +128,8 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 		"semver":           "3.0.0",
 	}
 
+	// idempotent test directory creation
+	_ = os.RemoveAll(rootDir)
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
 
 	factory := pythondeployer.NewFactory()

@@ -71,14 +71,12 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 		return nil, err
 	}
 
-	venvs := map[string]string{}
-
 	return &Connector{
 		config:        config,
 		logger:        logger,
 		pythonFactory: pythonFactory,
 		lock:          &sync.Mutex{},
-		venvs:         venvs,
+		venvs:         make(map[string]struct{}),
 	}, nil
 }
 

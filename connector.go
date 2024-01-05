@@ -6,7 +6,6 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"os"
 	"sync"
 )
 
@@ -14,7 +13,7 @@ type Connector struct {
 	config        *Config
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
-	venvs         map[string]string
+	venvs         map[string]struct{}
 	lock          *sync.Mutex
 }
 
@@ -53,16 +52,14 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 	c.lock.Lock()
 	_, cachedPath := c.venvs[fullModuleName]
 	if !cachedPath {
-		moduleAbspath, err := pythonCliWrapper.GetModulePath(fullModuleName)
+		modulePresent, err := pythonCliWrapper.ModuleExists(fullModuleName)
 		if err != nil {
 			return fmt.Errorf("error looking for python module (%w)", err)
 		}
 
-		// remember the module's absolute file path for later
-		c.venvs[fullModuleName] = *moduleAbspath
-
-		_, fileNotPresent := os.Stat(*moduleAbspath)
-		if fileNotPresent == nil && c.config.ModulePullPolicy == ModulePullPolicyIfNotPresent {
+		if *modulePresent && c.config.ModulePullPolicy == ModulePullPolicyIfNotPresent {
+			// remember we found the module if someone asks again later
+			c.venvs[fullModuleName] = struct{}{}
 			// file is present, so we do not pull it
 			return nil
 		}
@@ -77,6 +74,8 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 		if err := pythonCliWrapper.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
 			return err
 		}
+		// remember we found the module if someone asks again later
+		c.venvs[fullModuleName] = struct{}{}
 	}
 	c.lock.Unlock()
 	return nil
