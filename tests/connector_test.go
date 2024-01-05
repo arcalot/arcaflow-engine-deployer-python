@@ -141,7 +141,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 
 	// Choose how many connectors and plugins to make
 	const n_connectors = 4
-	const n_plugin_copies = 3
+	const n_plugin_copies = 10
 	wg := &sync.WaitGroup{}
 	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
 
@@ -179,7 +179,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	// Wait for all the plugins to be done
 	wg.Wait()
 
-	//t.Cleanup(func() {
-	//	assert.NoError(t, os.RemoveAll(rootDir))
-	//})
+	t.Cleanup(func() {
+		assert.NoError(t, os.RemoveAll(rootDir))
+	})
 }

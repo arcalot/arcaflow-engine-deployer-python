@@ -121,6 +121,22 @@ func (p *cliWrapper) ModuleExists(fullModuleName string) (string, error) {
 	return *moduleAbspath, nil
 }
 
+func (p *cliWrapper) ModuleExists2(fullModuleName string) (*bool, error) {
+	moduleExists := false
+	modulePath, err := p.GetModulePath(fullModuleName)
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := os.Stat(*modulePath); os.IsNotExist(err) {
+		// false
+		return &moduleExists, nil
+	}
+
+	moduleExists = true
+	return &moduleExists, nil
+}
+
 func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
 	pipInstallArgs := []string{"install"}
 
