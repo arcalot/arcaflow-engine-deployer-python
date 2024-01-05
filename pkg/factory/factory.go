@@ -1,23 +1,25 @@
-package pythondeployer
+package factory
 
 import (
 	"fmt"
+	"go.flow.arcalot.io/pythondeployer/internal/config"
+	"go.flow.arcalot.io/pythondeployer/internal/connector"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"sync/atomic"
 
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	pythonDeployerSchema "go.flow.arcalot.io/pythondeployer/pkg/schema"
 )
 
 // NewFactory creates a new factory for the Docker deployer.
-func NewFactory() deployer.ConnectorFactory[*Config] {
+func NewFactory() deployer.ConnectorFactory[*config.Config] {
 
 	return &factory{connectorCounter: &atomic.Int64{}}
 }
@@ -34,8 +36,8 @@ func (f factory) DeploymentType() deployer.DeploymentType {
 	return "python"
 }
 
-func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*Config] {
-	return Schema
+func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] {
+	return pythonDeployerSchema.Schema
 }
 
 func (f factory) NextConnectorIndex() int {
@@ -43,10 +45,10 @@ func (f factory) NextConnectorIndex() int {
 	return int(f.connectorCounter.Load())
 }
 
-func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, error) {
+func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Connector, error) {
 	pythonPath, err := binaryCheck(config.PythonPath)
 	if err != nil {
-		return &Connector{}, fmt.Errorf("python binary check failed with error: %w", err)
+		return &connector.Connector{}, fmt.Errorf("python binary check failed with error: %w", err)
 	}
 
 	connectorFilename := strings.Join([]string{
@@ -73,15 +75,19 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 		return nil, err
 	}
 
-	return &Connector{
-		config:        config,
-		logger:        logger,
-		connectorDir:  connectorFilepath,
-		pythonFactory: pythonFactory,
-		pythonCli:     &pythonCli,
-		lock:          &sync.Mutex{},
-		modules:       make(map[string]struct{}),
-	}, nil
+	//return &connector.Connector{
+	//	config:        config,
+	//	logger:        logger,
+	//	connectorDir:  connectorFilepath,
+	//	pythonFactory: pythonFactory,
+	//	pythonCli:     &pythonCli,
+	//	lock:          &sync.Mutex{},
+	//	modules:       make(map[string]struct{}),
+	//}, nil
+	cn := connector.NewConnector(
+		config, logger, connectorFilepath,
+		pythonFactory, &pythonCli)
+	return &cn, nil
 }
 
 // binaryCheck validates there is a python binary in a valid absolute path

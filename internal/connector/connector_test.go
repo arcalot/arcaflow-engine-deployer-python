@@ -1,4 +1,4 @@
-package pythondeployer
+package connector_test
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
+	pythondeployer "go.flow.arcalot.io/pythondeployer/pkg/factory"
 	"go.flow.arcalot.io/pythondeployer/tests"
 	"os"
 	"sync"
@@ -132,7 +133,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	_ = os.RemoveAll(rootDir)
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
 
-	factory := NewFactory()
+	factory := pythondeployer.NewFactory()
 	deployerSchema := factory.ConfigurationSchema()
 	unserializedConfig, err := deployerSchema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)

@@ -1,4 +1,4 @@
-package pythondeployer
+package connector
 
 import (
 	"go.arcalot.io/log/v2"

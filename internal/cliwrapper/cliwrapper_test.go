@@ -1,8 +1,9 @@
-package cliwrapper
+package cliwrapper_test
 
 import (
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
+	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"go.flow.arcalot.io/pythondeployer/tests"
 	"os"
 	"sync"
@@ -28,7 +29,7 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	wrap := NewCliWrapper(pythonPath, tempdir, logger)
+	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, logger)
 	assert.NoError(t, wrap.Venv(testModule.Location))
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

@@ -1,4 +1,4 @@
-package pythondeployer
+package config
 
 type Config struct {
 	PythonPath string `json:"pythonPath"`

@@ -1,4 +1,4 @@
-package pythondeployer
+package connector
 
 import (
 	"context"
@@ -6,19 +6,32 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"os"
 	"path/filepath"
 	"sync"
 )
 
 type Connector struct {
-	config        *Config
+	config        *config.Config
 	connectorDir  string
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
 	pythonCli     *cliwrapper.CliWrapper
 	modules       map[string]struct{}
 	lock          *sync.Mutex
+}
+
+func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonFactory cliwrapper.CliWrapperFactory, pythonCli *cliwrapper.CliWrapper) Connector {
+	return Connector{
+		config:        config,
+		logger:        logger,
+		connectorDir:  connectorDir,
+		pythonFactory: pythonFactory,
+		pythonCli:     pythonCli,
+		lock:          &sync.Mutex{},
+		modules:       make(map[string]struct{}),
+	}
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
@@ -62,7 +75,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 			return fmt.Errorf("error looking for python module (%w)", err)
 		}
 
-		if *modulePresent && c.config.ModulePullPolicy == ModulePullPolicyIfNotPresent {
+		if *modulePresent && c.config.ModulePullPolicy == config.ModulePullPolicyIfNotPresent {
 			// remember we found the module if someone asks again later
 			c.modules[fullModuleName] = struct{}{}
 			// file is present, so we do not pull it

@@ -1,6 +1,7 @@
-package pythondeployer
+package schema
 
 import (
+	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"regexp"
 
 	"go.flow.arcalot.io/pluginsdk/schema"
@@ -8,8 +9,8 @@ import (
 )
 
 // Schema describes the deployment options of the Docker deployment mechanism.
-var Schema = schema.NewTypedScopeSchema[*Config](
-	schema.NewStructMappedObjectSchema[*Config](
+var Schema = schema.NewTypedScopeSchema[*config.Config](
+	schema.NewStructMappedObjectSchema[*config.Config](
 		"Config",
 		map[string]*schema.PropertySchema{
 			"pythonPath": schema.NewPropertySchema(
@@ -58,15 +59,15 @@ var Schema = schema.NewTypedScopeSchema[*Config](
 			//),
 			"modulePullPolicy": schema.NewPropertySchema(
 				schema.NewStringEnumSchema(map[string]*schema.DisplayValue{
-					string(ModulePullPolicyAlways):       {NameValue: schema.PointerTo("Always")},
-					string(ModulePullPolicyIfNotPresent): {NameValue: schema.PointerTo("If not present")},
+					string(config.ModulePullPolicyAlways):       {NameValue: schema.PointerTo("Always")},
+					string(config.ModulePullPolicyIfNotPresent): {NameValue: schema.PointerTo("If not present")},
 				}),
 				schema.NewDisplayValue(schema.PointerTo("Module pull policy"), schema.PointerTo("When to pull the python module."), nil),
 				false,
 				nil,
 				nil,
 				nil,
-				schema.PointerTo(util.JSONEncode(string(ModulePullPolicyIfNotPresent))),
+				schema.PointerTo(util.JSONEncode(string(config.ModulePullPolicyIfNotPresent))),
 				nil,
 			),
 		},

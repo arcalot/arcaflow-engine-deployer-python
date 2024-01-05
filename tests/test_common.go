@@ -6,7 +6,8 @@ import (
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
-	"go.flow.arcalot.io/pythondeployer"
+	"go.flow.arcalot.io/pythondeployer/internal/config"
+	"go.flow.arcalot.io/pythondeployer/pkg/factory"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -51,12 +52,12 @@ func RandString(n int) string {
 	return string(b)
 }
 
-func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *pythondeployer.Config) {
+func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Connector, *config.Config) {
 	var serializedConfig any
 	if err := json.Unmarshal([]byte(configJSON), &serializedConfig); err != nil {
 		t.Fatal(err)
 	}
-	factory := pythondeployer.NewFactory()
+	factory := factory.NewFactory()
 	schema := factory.ConfigurationSchema()
 	unserializedConfig, err := schema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
