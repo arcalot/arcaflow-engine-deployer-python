@@ -65,6 +65,7 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 // so that this connector will only pull a module once if it is not present
 func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
 	c.lock.Lock()
+	defer c.lock.Unlock()
 	_, cachedPath := c.modules[fullModuleName]
 	if !cachedPath {
 		modulePresent, err := c.pythonCli.ModuleExists(fullModuleName)
@@ -88,7 +89,6 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
 		// remember we found the module if someone asks again later
 		c.modules[fullModuleName] = struct{}{}
 	}
-	c.lock.Unlock()
 	return nil
 }
 
