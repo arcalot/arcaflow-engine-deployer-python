@@ -124,6 +124,12 @@ func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
 }
 
 func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
+	// every plugin module gets its own python virtual environment
+	err := p.Venv(fullModuleName)
+	if err != nil {
+		return err
+	}
+
 	pipInstallArgs := []string{"install"}
 
 	// Pip's default behavior is to pull if the module is not present in the
