@@ -18,7 +18,7 @@ type Connector struct {
 	logger       log.Logger
 	pythonCli    cliwrapper.CliWrapper
 	modules      map[string]struct{}
-	lock         *sync.Mutex
+	lock         sync.Mutex
 }
 
 func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonCli cliwrapper.CliWrapper) Connector {
@@ -27,7 +27,7 @@ func NewConnector(config *config.Config, logger log.Logger, connectorDir string,
 		logger:       logger,
 		connectorDir: connectorDir,
 		pythonCli:    pythonCli,
-		lock:         &sync.Mutex{},
+		lock:         sync.Mutex{},
 		modules:      make(map[string]struct{}),
 	}
 }
