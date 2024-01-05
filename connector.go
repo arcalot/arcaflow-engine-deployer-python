@@ -55,7 +55,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 	if !cachedPath {
 		moduleAbspath, err := pythonCliWrapper.GetModulePath(fullModuleName)
 		if err != nil {
-			return fmt.Errorf("error get python module path while attempting to pull (%w)", err)
+			return fmt.Errorf("error looking for python module (%w)", err)
 		}
 
 		// remember the module's absolute file path for later

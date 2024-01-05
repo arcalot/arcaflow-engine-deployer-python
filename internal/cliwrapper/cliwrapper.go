@@ -7,6 +7,7 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"io"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -104,6 +105,20 @@ func (p *cliWrapper) GetModulePath(fullModuleName string) (*string, error) {
 		modulePath += "_latest"
 	}
 	return &modulePath, err
+}
+
+func (p *cliWrapper) ModuleExists(fullModuleName string) (string, error) {
+	moduleAbspath, err := p.GetModulePath(fullModuleName)
+	if err != nil {
+		return "", fmt.Errorf("error getting python module path while attempting to pull (%w)", err)
+	}
+	_, fileNotPresent := os.Stat(*moduleAbspath)
+	if fileNotPresent != nil {
+		// os could not find file
+		return "", nil
+	}
+	// else file found
+	return *moduleAbspath, nil
 }
 
 func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
