@@ -47,16 +47,18 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	}
 
 	pluginDirAbspath, err := c.CreatePluginDir("")
-	stdin, stdout, err := pythonCli.Deploy(image, *pluginDirAbspath)
+	stdin, stdout, deployCommand, stdErrBuff, err := pythonCli.Deploy(image, *pluginDirAbspath)
 	if err != nil {
 		return nil, err
 	}
 
 	cliPlugin := CliPlugin{
-		wrapper:        c.pythonCli,
+		wrapper:        &pythonCli,
 		containerImage: image,
 		stdin:          stdin,
 		stdout:         stdout,
+		deployCommand:  deployCommand,
+		stdErrBuff:     stdErrBuff,
 		logger:         c.logger,
 	}
 

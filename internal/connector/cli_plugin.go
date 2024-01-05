@@ -4,10 +4,13 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"io"
+	"os/exec"
 )
 
 type CliPlugin struct {
 	wrapper        *cliwrapper.CliWrapper
+	deployCommand  *exec.Cmd
+	stdErrBuff     *cliwrapper.BufferThreadSafe
 	containerImage string
 	logger         log.Logger
 	stdin          io.WriteCloser
@@ -24,7 +27,7 @@ func (p *CliPlugin) Read(b []byte) (n int, err error) {
 
 func (p *CliPlugin) Close() error {
 	//wrapper := *p.wrapper
-	if err := (*p.wrapper).KillAndClean(); err != nil {
+	if err := p.KillAndClean(); err != nil {
 		return err
 	}
 
@@ -43,4 +46,20 @@ func (p *CliPlugin) Close() error {
 
 func (p *CliPlugin) ID() string {
 	return p.containerImage
+}
+
+func (p *CliPlugin) KillAndClean() error {
+	p.logger.Infof("killing config process with pid %d", p.deployCommand.Process.Pid)
+
+	// even if this error was non-nil, we would not handle it differently
+	_ = p.deployCommand.Process.Kill()
+
+	_, err := p.deployCommand.Process.Wait()
+	if err != nil {
+		return err
+	}
+	if p.stdErrBuff.Len() > 0 {
+		p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
+	}
+	return nil
 }

@@ -20,33 +20,33 @@ type cliWrapper struct {
 	connectorDir   string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
-	stdErrBuff     bufferThreadSafe
+	stdErrBuff     BufferThreadSafe
 }
 
-type bufferThreadSafe struct {
+type BufferThreadSafe struct {
 	b    bytes.Buffer
 	lock sync.Mutex
 }
 
-func (b *bufferThreadSafe) Len() int {
+func (b *BufferThreadSafe) Len() int {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	return b.b.Len()
 }
 
-func (b *bufferThreadSafe) Write(p []byte) (int, error) {
+func (b *BufferThreadSafe) Write(p []byte) (int, error) {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	return b.b.Write(p)
 }
 
-func (b *bufferThreadSafe) String() string {
+func (b *BufferThreadSafe) String() string {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	return b.b.String()
 }
 
-func (b *bufferThreadSafe) Reset() {
+func (b *BufferThreadSafe) Reset() {
 	b.lock.Lock()
 	defer b.lock.Unlock()
 	b.b.Reset()
@@ -65,7 +65,7 @@ func NewCliWrapper(
 		connectorDir:   connectorDir,
 		// use thread safe buffer for concurrent access to this buffer by
 		// the cli wrapper and the cli plugin
-		stdErrBuff: bufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
+		stdErrBuff: BufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
 	}
 }
 
@@ -173,44 +173,46 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	return nil
 }
 
-func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, error) {
+func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *BufferThreadSafe, error) {
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	modulePath, err := p.GetModulePath(fullModuleName)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 	venvPython := filepath.Join(*modulePath, "venv/bin/python")
 	args := []string{"-m"}
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName, "--atp")
 
-	p.deployCommand = exec.Command(venvPython, args...) //nolint:gosec
-	p.deployCommand.Stderr = &p.stdErrBuff
+	//stdErrBuff := bytes.Buffer{}
+	stdErrBuff := BufferThreadSafe{}
+	deployCommand := exec.Command(venvPython, args...) //nolint:gosec
+	deployCommand.Stderr = &stdErrBuff
 
 	// execute plugin in its own directory in case the plugin needs
 	// to write to its current working directory
-	p.deployCommand.Dir = pluginDirAbsPath
+	deployCommand.Dir = pluginDirAbsPath
 
-	stdin, err := p.deployCommand.StdinPipe()
+	stdin, err := deployCommand.StdinPipe()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	stdout, err := p.deployCommand.StdoutPipe()
+	stdout, err := deployCommand.StdoutPipe()
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, nil, err
 	}
-	err = p.deployCommand.Start()
-	if p.stdErrBuff.Len() > 0 {
-		p.logger.Warningf("python process stderr already has content '%s'", p.stdErrBuff.String())
+	err = deployCommand.Start()
+	if stdErrBuff.Len() > 0 {
+		p.logger.Warningf("python process stderr already has content '%s'", stdErrBuff.String())
 	}
 	if err != nil {
-		return nil, nil, fmt.Errorf("error starting python process (%w)", err)
+		return nil, nil, nil, nil, fmt.Errorf("error starting python process (%w)", err)
 	}
-	return stdin, stdout, nil
+	return stdin, stdout, deployCommand, &stdErrBuff, nil
 }
 
 func (p *cliWrapper) KillAndClean() error {
