@@ -57,8 +57,8 @@ func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 	if err := json.Unmarshal([]byte(configJSON), &serializedConfig); err != nil {
 		t.Fatal(err)
 	}
-	factory := factory.NewFactory()
-	schema := factory.ConfigurationSchema()
+	f := factory.NewFactory()
+	schema := f.ConfigurationSchema()
 	unserializedConfig, err := schema.UnserializeType(serializedConfig)
 	assert.NoError(t, err)
 	pythonPath, err := GetPythonPath()
@@ -73,7 +73,7 @@ func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 		unserializedConfig.WorkDir = *workdir
 	}
 
-	connector, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
+	connector, err := f.Create(unserializedConfig, log.NewTestLogger(t))
 	assert.NoError(t, err)
 	return connector, unserializedConfig
 }
