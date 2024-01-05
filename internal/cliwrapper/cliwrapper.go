@@ -188,7 +188,6 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName, "--atp")
 
-	//stdErrBuff := bytes.Buffer{}
 	stdErrBuff := BufferThreadSafe{}
 	deployCommand := exec.Command(venvPython, args...) //nolint:gosec
 	deployCommand.Stderr = &stdErrBuff
@@ -213,22 +212,6 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 		return nil, nil, nil, nil, fmt.Errorf("error starting python process (%w)", err)
 	}
 	return stdin, stdout, deployCommand, &stdErrBuff, nil
-}
-
-func (p *cliWrapper) KillAndClean() error {
-	p.logger.Infof("killing config process with pid %d", p.deployCommand.Process.Pid)
-
-	// even if this error was non-nil, we would not handle it differently
-	_ = p.deployCommand.Process.Kill()
-
-	_, err := p.deployCommand.Process.Wait()
-	if err != nil {
-		return err
-	}
-	if p.stdErrBuff.Len() > 0 {
-		p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
-	}
-	return nil
 }
 
 // Venv creates a Python virtual environment for the given

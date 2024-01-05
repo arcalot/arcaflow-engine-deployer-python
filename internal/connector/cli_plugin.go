@@ -8,7 +8,6 @@ import (
 )
 
 type CliPlugin struct {
-	wrapper        *cliwrapper.CliWrapper
 	deployCommand  *exec.Cmd
 	stdErrBuff     *cliwrapper.BufferThreadSafe
 	containerImage string

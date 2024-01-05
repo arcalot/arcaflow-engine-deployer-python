@@ -16,12 +16,12 @@ type Connector struct {
 	config       *config.Config
 	connectorDir string
 	logger       log.Logger
-	pythonCli    *cliwrapper.CliWrapper
+	pythonCli    cliwrapper.CliWrapper
 	modules      map[string]struct{}
 	lock         *sync.Mutex
 }
 
-func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonCli *cliwrapper.CliWrapper) Connector {
+func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonCli cliwrapper.CliWrapper) Connector {
 	return Connector{
 		config:       config,
 		logger:       logger,
@@ -33,14 +33,13 @@ func NewConnector(config *config.Config, logger log.Logger, connectorDir string,
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
-
 	err2 := c.pullMod(ctx, image)
 	if err2 != nil {
 		return nil, err2
 	}
 
 	pluginDirAbspath, err := c.CreatePluginDir("")
-	stdin, stdout, deployCommand, stdErrBuff, err := (*c.pythonCli).Deploy(image, *pluginDirAbspath)
+	stdin, stdout, deployCommand, stdErrBuff, err := c.pythonCli.Deploy(image, *pluginDirAbspath)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +63,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
 	c.lock.Lock()
 	_, cachedPath := c.modules[fullModuleName]
 	if !cachedPath {
-		modulePresent, err := (*c.pythonCli).ModuleExists(fullModuleName)
+		modulePresent, err := c.pythonCli.ModuleExists(fullModuleName)
 		if err != nil {
 			return fmt.Errorf("error looking for python module (%w)", err)
 		}
@@ -79,7 +78,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
 		// else file is not present, or our pull policy is Always, so let's go
 		c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
 		c.logger.Debugf("pulling module: %s", fullModuleName)
-		if err := (*c.pythonCli).PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
+		if err := c.pythonCli.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
 			return err
 		}
 		// remember we found the module if someone asks again later

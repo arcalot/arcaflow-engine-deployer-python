@@ -20,7 +20,6 @@ import (
 
 // NewFactory creates a new factory for the Docker deployer.
 func NewFactory() deployer.ConnectorFactory[*config.Config] {
-
 	return &factory{connectorCounter: &atomic.Int64{}}
 }
 
@@ -71,7 +70,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 	pythonCli := cliwrapper.NewCliWrapper(pythonPath, connectorFilepath, logger)
 
 	cn := connector.NewConnector(
-		config, logger, connectorFilepath, &pythonCli)
+		config, logger, connectorFilepath, pythonCli)
 	return &cn, nil
 }
 
