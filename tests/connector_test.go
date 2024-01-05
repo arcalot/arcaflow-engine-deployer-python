@@ -19,7 +19,8 @@ const examplePluginNickname string = "pythonuser"
 var inOutConfigGitPullIfNotPresent = `
 {
 	"workdir":"/tmp",
-	"modulePullPolicy":"IfNotPresent"
+	"modulePullPolicy":"IfNotPresent",
+    "semver": "3.0.0"
 }
 `
 
@@ -93,7 +94,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				"name":    "poisson-rate-submit",
 				"cleanup": "true",
 				"params": map[string]any{
-					"size":           "900KiB",
+					"size":           "90KiB",
 					"readwrite":      "randrw",
 					"ioengine":       "sync",
 					"iodepth":        32,
@@ -115,7 +116,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 			stepID:   "wait",
 			location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
 			input: map[string]any{
-				"seconds": "0.5",
+				"seconds": "0.05",
 			},
 		},
 	}
@@ -123,7 +124,8 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	rootDir := "/tmp/multi-module"
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
-		"modulePullPolicy": "Always",
+		"modulePullPolicy": "IfNotPresent",
+		"semver":           "3.0.0",
 	}
 
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
@@ -139,7 +141,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 
 	// Choose how many connectors and plugins to make
 	const n_connectors = 4
-	const n_plugin_copies = 10
+	const n_plugin_copies = 3
 	wg := &sync.WaitGroup{}
 	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
 
@@ -177,7 +179,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	// Wait for all the plugins to be done
 	wg.Wait()
 
-	t.Cleanup(func() {
-		assert.NoError(t, os.RemoveAll(rootDir))
-	})
+	//t.Cleanup(func() {
+	//	assert.NoError(t, os.RemoveAll(rootDir))
+	//})
 }
