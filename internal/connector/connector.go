@@ -36,24 +36,24 @@ func NewConnector(config *config.Config, logger log.Logger, connectorDir string,
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
 
-	pythonCli, err := c.pythonFactory.Create("", c.logger)
-	if err != nil {
-		return nil, err
-	}
+	//pythonCli, err := c.pythonFactory.Create("", c.logger)
+	//if err != nil {
+	//	return nil, err
+	//}
 
-	err2 := c.pullMod(ctx, image, pythonCli)
+	err2 := c.pullMod(ctx, image, *c.pythonCli)
 	if err2 != nil {
 		return nil, err2
 	}
 
 	pluginDirAbspath, err := c.CreatePluginDir("")
-	stdin, stdout, deployCommand, stdErrBuff, err := pythonCli.Deploy(image, *pluginDirAbspath)
+	stdin, stdout, deployCommand, stdErrBuff, err := (*c.pythonCli).Deploy(image, *pluginDirAbspath)
 	if err != nil {
 		return nil, err
 	}
 
 	cliPlugin := CliPlugin{
-		wrapper:        &pythonCli,
+		//wrapper:        c.pythonCli,
 		containerImage: image,
 		stdin:          stdin,
 		stdout:         stdout,

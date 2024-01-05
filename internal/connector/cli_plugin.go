@@ -26,7 +26,6 @@ func (p *CliPlugin) Read(b []byte) (n int, err error) {
 }
 
 func (p *CliPlugin) Close() error {
-	//wrapper := *p.wrapper
 	if err := p.KillAndClean(); err != nil {
 		return err
 	}
