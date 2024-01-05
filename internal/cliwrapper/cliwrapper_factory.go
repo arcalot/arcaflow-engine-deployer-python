@@ -47,5 +47,5 @@ func (f CliWrapperFactory) Create(pluginDir string, logger log.Logger) (CliWrapp
 		}
 	}
 	return NewCliWrapper(
-		f.pythonAbsPath, f.connectorDirAbsPath, workdir, logger), nil
+		f.pythonAbsPath, f.connectorDirAbsPath, logger), nil
 }

@@ -6,36 +6,41 @@ import (
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"os"
+	"path/filepath"
 	"sync"
 )
 
 type Connector struct {
 	config        *Config
+	connectorDir  string
 	logger        log.Logger
 	pythonFactory cliwrapper.CliWrapperFactory
+	pythonCli     cliwrapper.CliWrapper
 	modules       map[string]struct{}
 	lock          *sync.Mutex
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
 
-	pythonCliWrapper, err := c.pythonFactory.Create("", c.logger)
+	pythonCli, err := c.pythonFactory.Create("", c.logger)
 	if err != nil {
 		return nil, err
 	}
 
-	err2 := c.pullMod(ctx, image, pythonCliWrapper)
+	err2 := c.pullMod(ctx, image, pythonCli)
 	if err2 != nil {
 		return nil, err2
 	}
 
-	stdin, stdout, err := pythonCliWrapper.Deploy(image)
+	pluginDirAbspath, err := c.CreatePluginDir("")
+	stdin, stdout, err := pythonCli.Deploy(image, *pluginDirAbspath)
 	if err != nil {
 		return nil, err
 	}
 
 	cliPlugin := CliPlugin{
-		wrapper:        pythonCliWrapper,
+		wrapper:        pythonCli,
 		containerImage: image,
 		stdin:          stdin,
 		stdout:         stdout,
@@ -75,4 +80,22 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string, pythonCliW
 	}
 	c.lock.Unlock()
 	return nil
+}
+
+func (c *Connector) CreatePluginDir(pluginDir string) (*string, error) {
+	var workdir string
+	var err error
+	if pluginDir == "" {
+		workdir, err = os.MkdirTemp(c.connectorDir, "")
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		workdir = filepath.Join(c.connectorDir, filepath.Clean(pluginDir))
+		err = os.MkdirAll(workdir, os.ModePerm)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &workdir, nil
 }

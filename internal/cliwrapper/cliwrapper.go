@@ -17,7 +17,6 @@ import (
 
 type cliWrapper struct {
 	pythonFullPath string
-	pluginDir      string
 	connectorDir   string
 	deployCommand  *exec.Cmd
 	logger         log.Logger
@@ -58,14 +57,12 @@ const RunnableClassifier string = "Arcaflow :: Python Deployer :: Runnable"
 func NewCliWrapper(
 	pythonFullPath string,
 	connectorDir string,
-	workDir string,
 	logger log.Logger,
 ) CliWrapper {
 	return &cliWrapper{
 		pythonFullPath: pythonFullPath,
 		logger:         logger,
 		connectorDir:   connectorDir,
-		pluginDir:      workDir,
 		// use thread safe buffer for concurrent access to this buffer by
 		// the cli wrapper and the cli plugin
 		stdErrBuff: bufferThreadSafe{bytes.Buffer{}, sync.Mutex{}},
@@ -124,7 +121,7 @@ func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
 }
 
 func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
-	// every plugin module gets its own python virtual environment
+	// every plugin python module gets its own python virtual environment
 	err := p.Venv(fullModuleName)
 	if err != nil {
 		return err
@@ -176,7 +173,7 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	return nil
 }
 
-func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadCloser, error) {
+func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, error) {
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
 		return nil, nil, err
@@ -196,7 +193,7 @@ func (p *cliWrapper) Deploy(fullModuleName string) (io.WriteCloser, io.ReadClose
 
 	// execute plugin in its own directory in case the plugin needs
 	// to write to its current working directory
-	p.deployCommand.Dir = p.pluginDir
+	p.deployCommand.Dir = pluginDirAbsPath
 
 	stdin, err := p.deployCommand.StdinPipe()
 	if err != nil {

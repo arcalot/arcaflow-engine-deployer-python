@@ -26,10 +26,9 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	assert.NoError(t, err)
 	tempdir := "/tmp/pullmodule"
 	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
-	pluginDir, err := os.MkdirTemp(tempdir, "")
 	assert.NoError(t, err)
 	logger := log.NewTestLogger(t)
-	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, pluginDir, logger)
+	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, logger)
 	assert.NoError(t, wrap.Venv(testModule.location))
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

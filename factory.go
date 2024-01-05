@@ -66,6 +66,8 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 			"error creating temporary directory for python connector (%w)", err)
 	}
 
+	pythonCli := cliwrapper.NewCliWrapper(pythonPath, connectorFilepath, logger)
+
 	pythonFactory, err := cliwrapper.NewCliWrapperFactory(pythonPath, connectorFilepath, logger)
 	if err != nil {
 		return nil, err
@@ -74,7 +76,9 @@ func (f factory) Create(config *Config, logger log.Logger) (deployer.Connector, 
 	return &Connector{
 		config:        config,
 		logger:        logger,
+		connectorDir:  connectorFilepath,
 		pythonFactory: pythonFactory,
+		pythonCli:     pythonCli,
 		lock:          &sync.Mutex{},
 		modules:       make(map[string]struct{}),
 	}, nil
