@@ -1,4 +1,4 @@
-package arcaflow_engine_deployer_python
+package pythondeployer
 
 import (
 	"fmt"

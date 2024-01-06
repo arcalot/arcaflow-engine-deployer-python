@@ -1,4 +1,4 @@
-package arcaflow_engine_deployer_python
+package pythondeployer
 
 import (
 	"go.flow.arcalot.io/pythondeployer/internal/config"
