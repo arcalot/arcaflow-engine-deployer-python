@@ -33,7 +33,7 @@ func NewConnector(config *config.Config, logger log.Logger, connectorDir string,
 }
 
 func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, error) {
-	err := c.pullMod(ctx, image)
+	err := c.PullMod(ctx, image, c.pythonCli)
 	if err != nil {
 		return nil, err
 	}
@@ -60,15 +60,15 @@ func (c *Connector) Deploy(ctx context.Context, image string) (deployer.Plugin, 
 	return &cliPlugin, nil
 }
 
-// pullMod synchronizes the creation of Python virtual environments for Python
+// PullMod synchronizes the creation of Python virtual environments for Python
 // module plugins, during the concurrent instantiation of Python cli plugins,
 // so that this connector will only pull a module once if it is not present
-func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
+func (c *Connector) PullMod(_ context.Context, fullModuleName string, pythonCli cliwrapper.CliWrapper) error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	_, cachedPath := c.modules[fullModuleName]
 	if !cachedPath {
-		modulePresent, err := c.pythonCli.ModuleExists(fullModuleName)
+		modulePresent, err := pythonCli.ModuleExists(fullModuleName)
 		if err != nil {
 			return fmt.Errorf("error looking for python module (%w)", err)
 		}
@@ -83,7 +83,7 @@ func (c *Connector) pullMod(_ context.Context, fullModuleName string) error {
 		// else file is not present, or our pull policy is Always, so let's go
 		c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
 		c.logger.Debugf("pulling module: %s", fullModuleName)
-		if err := c.pythonCli.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
+		if err := pythonCli.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
 			return err
 		}
 		// remember we found the module if someone asks again later

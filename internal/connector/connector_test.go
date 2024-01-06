@@ -10,7 +10,10 @@ import (
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	pythondeployer "go.flow.arcalot.io/pythondeployer"
+	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"go.flow.arcalot.io/pythondeployer/internal/config"
+	"go.flow.arcalot.io/pythondeployer/internal/connector"
+	"io"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -53,8 +56,8 @@ func TestRunStepGit(t *testing.T) {
 		"name": examplePluginNickname,
 	}
 
-	connector, _ := GetConnector(t, inOutConfigGitPullIfNotPresent, nil)
-	OutputID, OutputData, Error := RunStep(t, connector, moduleName, stepID, input)
+	connector_, _ := GetConnector(t, inOutConfigGitPullIfNotPresent, nil)
+	OutputID, OutputData, Error := RunStep(t, connector_, moduleName, stepID, input)
 	assert.NoError(t, Error)
 	assert.Equals(t, OutputID, "success")
 	assert.Equals(t,
@@ -249,7 +252,90 @@ func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 		unserializedConfig.WorkDir = *workdir
 	}
 
-	connector, err := f.Create(unserializedConfig, log.NewTestLogger(t))
+	connector_, err := f.Create(unserializedConfig, log.NewTestLogger(t))
 	assert.NoError(t, err)
-	return connector, unserializedConfig
+	return connector_, unserializedConfig
+}
+
+func TestConnector_PullMod(t *testing.T) {
+	rootDir := "/tmp/if-notpresent"
+
+	// idempotent test directory creation
+	_ = os.RemoveAll(rootDir)
+	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
+	logger := log.NewTestLogger(t)
+
+	cfgIfNotPresent := config.Config{
+		WorkDir:          rootDir,
+		PythonSemVer:     "3.0.0",
+		PythonPath:       "",
+		ModulePullPolicy: config.ModulePullPolicyIfNotPresent,
+	}
+
+	testPythonCliStub := &pythonCliStub{
+		PullPolicy: cfgIfNotPresent.ModulePullPolicy,
+	}
+	connector_ := connector.NewConnector(
+		&cfgIfNotPresent,
+		logger,
+		rootDir,
+		testPythonCliStub)
+	ctx := context.Background()
+	err := connector_.PullMod(ctx, "mymod", testPythonCliStub)
+	assert.NoError(t, err)
+	assert.Equals(t, testPythonCliStub.Pulled, false)
+
+	cfgIfNotPresent = config.Config{
+		WorkDir:          rootDir,
+		PythonSemVer:     "3.0.0",
+		PythonPath:       "",
+		ModulePullPolicy: config.ModulePullPolicyAlways,
+	}
+
+	testPythonCliStub = &pythonCliStub{
+		PullPolicy: cfgIfNotPresent.ModulePullPolicy,
+	}
+	connector_ = connector.NewConnector(
+		&cfgIfNotPresent,
+		logger,
+		rootDir,
+		testPythonCliStub)
+	ctx = context.Background()
+	err = connector_.PullMod(ctx, "mymod", testPythonCliStub)
+	assert.NoError(t, err)
+	assert.Equals(t, testPythonCliStub.Pulled, true)
+}
+
+type pythonCliStub struct {
+	Pulled     bool
+	PullPolicy config.ModulePullPolicy
+}
+
+func (p *pythonCliStub) PullModule(fullModuleName string, pullPolicy string) error {
+	moduleExists, _ := p.ModuleExists("")
+	if !*moduleExists {
+		p.Pulled = true
+	}
+	return nil
+}
+
+func (p *pythonCliStub) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *cliwrapper.BufferThreadSafe, error) {
+	return nil, nil, nil, nil, nil
+}
+
+func (p *pythonCliStub) GetModulePath(fullModuleName string) (*string, error) {
+	return nil, nil
+}
+
+func (p *pythonCliStub) ModuleExists(fullModuleName string) (*bool, error) {
+	var exists bool
+	if p.PullPolicy == config.ModulePullPolicyAlways {
+		return &exists, nil
+	}
+	exists = true
+	return &exists, nil
+}
+
+func (p *pythonCliStub) Venv(fullModuleName string) error {
+	return nil
 }
