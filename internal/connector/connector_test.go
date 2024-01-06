@@ -45,7 +45,7 @@ var inOutConfigGitPullIfNotPresent = `
 {
 	"workdir":"/tmp",
 	"modulePullPolicy":"IfNotPresent",
-    "semver": "3.0.0"
+    "pythonSemver": "3.0.0"
 }
 `
 
@@ -150,7 +150,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
 		"modulePullPolicy": "IfNotPresent",
-		"semver":           "3.0.0",
+		"pythonSemver":     "3.0.0",
 	}
 
 	// idempotent test directory creation

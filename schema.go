@@ -35,7 +35,7 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				nil,
 				nil,
 			),
-			"semver": schema.NewPropertySchema(
+			"pythonSemver": schema.NewPropertySchema(
 				schema.NewStringSchema(nil, nil, nil),
 				schema.NewDisplayValue(schema.PointerTo("Python Semantic Version"),
 					schema.PointerTo("Python semantic version (i.e. 3.11.1) used on python path"), nil),
@@ -46,17 +46,6 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				nil,
 				nil,
 			),
-			//"rootdir": schema.NewPropertySchema(
-			//	schema.NewStringSchema(nil, nil, nil),
-			//	schema.NewDisplayValue(schema.PointerTo("Root Temporary Directory Path"),
-			//		schema.PointerTo("Provides the root directory where the modules virtual environments will be stored"), nil),
-			//	false,
-			//	nil,
-			//	nil,
-			//	nil,
-			//	nil,
-			//	nil,
-			//),
 			"modulePullPolicy": schema.NewPropertySchema(
 				schema.NewStringEnumSchema(map[string]*schema.DisplayValue{
 					string(config.ModulePullPolicyAlways):       {NameValue: schema.PointerTo("Always")},

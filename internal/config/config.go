@@ -1,10 +1,9 @@
 package config
 
 type Config struct {
-	PythonPath string `json:"pythonPath"`
-	WorkDir    string `json:"workdir"`
-	//RootDir          string           `json:"rootdir"`
-	PythonSemVer     string           `json:"semver"`
+	PythonPath       string           `json:"pythonPath"`
+	WorkDir          string           `json:"workdir"`
+	PythonSemVer     string           `json:"pythonSemver"`
 	ModulePullPolicy ModulePullPolicy `json:"modulePullPolicy"`
 }
 
