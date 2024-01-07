@@ -1,8 +1,9 @@
-package pythondeployer
+package config
 
 type Config struct {
 	PythonPath       string           `json:"pythonPath"`
 	WorkDir          string           `json:"workdir"`
+	PythonSemVer     string           `json:"pythonSemver"`
 	ModulePullPolicy ModulePullPolicy `json:"modulePullPolicy"`
 }
 

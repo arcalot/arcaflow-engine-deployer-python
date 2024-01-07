@@ -2,12 +2,13 @@ package cliwrapper
 
 import (
 	"io"
+	"os/exec"
 )
 
 type CliWrapper interface {
-	ModuleExists(fullModuleName string) (*bool, error)
-	PullModule(fullModuleName string) error
-	Deploy(fullModuleName string) (io.WriteCloser, io.ReadCloser, error)
-	KillAndClean() error
+	PullModule(fullModuleName string, pullPolicy string) error
+	Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *BufferThreadSafe, error)
 	GetModulePath(fullModuleName string) (*string, error)
+	ModuleExists(fullModuleName string) (*bool, error)
+	Venv(fullModuleName string) error
 }
