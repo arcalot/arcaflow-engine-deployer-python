@@ -258,84 +258,74 @@ func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 }
 
 func TestConnector_PullMod(t *testing.T) {
-	rootDir := "/tmp/if-notpresent"
-
-	// idempotent test directory creation
-	_ = os.RemoveAll(rootDir)
-	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
 	logger := log.NewTestLogger(t)
 
-	cfgIfNotPresent := config.Config{
-		WorkDir:          rootDir,
-		PythonSemVer:     "3.0.0",
+	// test if not present logic
+	cfg := config.Config{
+		WorkDir:          "",
+		PythonSemVer:     "",
 		PythonPath:       "",
 		ModulePullPolicy: config.ModulePullPolicyIfNotPresent,
 	}
-
 	testPythonCliMock := &pythonCliMock{
-		PullPolicy: cfgIfNotPresent.ModulePullPolicy,
+		PullPolicy:  cfg.ModulePullPolicy,
+		PyModExists: true,
 	}
 	connector_ := connector.NewConnector(
-		&cfgIfNotPresent,
+		&cfg,
 		logger,
-		rootDir,
+		"",
 		testPythonCliMock)
 	ctx := context.Background()
-	err := connector_.PullMod(ctx, "mymod", testPythonCliMock)
+	err := connector_.PullMod(ctx, "", testPythonCliMock)
 	assert.NoError(t, err)
-	assert.Equals(t, testPythonCliMock.Pulled, false)
+	assert.Equals(t, testPythonCliMock.PyModPulled, false)
 
-	cfgIfNotPresent = config.Config{
-		WorkDir:          rootDir,
-		PythonSemVer:     "3.0.0",
-		PythonPath:       "",
-		ModulePullPolicy: config.ModulePullPolicyAlways,
-	}
-
+	// test always logic
+	cfg.ModulePullPolicy = config.ModulePullPolicyAlways
 	testPythonCliMock = &pythonCliMock{
-		PullPolicy: cfgIfNotPresent.ModulePullPolicy,
+		PullPolicy:  cfg.ModulePullPolicy,
+		PyModExists: true,
 	}
 	connector_ = connector.NewConnector(
-		&cfgIfNotPresent,
+		&cfg,
 		logger,
-		rootDir,
+		"",
 		testPythonCliMock)
 	ctx = context.Background()
-	err = connector_.PullMod(ctx, "mymod", testPythonCliMock)
+
+	err = connector_.PullMod(ctx, "", testPythonCliMock)
 	assert.NoError(t, err)
-	assert.Equals(t, testPythonCliMock.Pulled, true)
+	assert.Equals(t, testPythonCliMock.PyModPulled, true)
 }
 
 type pythonCliMock struct {
-	Pulled     bool
-	PullPolicy config.ModulePullPolicy
+	PyModExists bool
+	PyModPulled bool
+	PullPolicy  config.ModulePullPolicy
 }
 
-func (p *pythonCliMock) PullModule(fullModuleName string, pullPolicy string) error {
+func (p *pythonCliMock) PullModule(_ string, _ string) error {
 	moduleExists, _ := p.ModuleExists("")
-	if !*moduleExists {
-		p.Pulled = true
+	if !*moduleExists || p.PullPolicy == config.ModulePullPolicyAlways {
+		p.PyModPulled = true
 	}
 	return nil
 }
 
-func (p *pythonCliMock) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *cliwrapper.BufferThreadSafe, error) {
+func (p *pythonCliMock) Deploy(_ string, _ string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *cliwrapper.BufferThreadSafe, error) {
 	return nil, nil, nil, nil, nil
 }
 
-func (p *pythonCliMock) GetModulePath(fullModuleName string) (*string, error) {
+func (p *pythonCliMock) GetModulePath(_ string) (*string, error) {
 	return nil, nil
 }
 
-func (p *pythonCliMock) ModuleExists(fullModuleName string) (*bool, error) {
-	var exists bool
-	if p.PullPolicy == config.ModulePullPolicyAlways {
-		return &exists, nil
-	}
-	exists = true
-	return &exists, nil
+func (p *pythonCliMock) ModuleExists(_ string) (*bool, error) {
+	exists := &p.PyModExists
+	return exists, nil
 }
 
-func (p *pythonCliMock) Venv(fullModuleName string) error {
+func (p *pythonCliMock) Venv(_ string) error {
 	return nil
 }
