@@ -76,20 +76,6 @@ func (c *Connector) PullMod(_ context.Context, fullModuleName string, pythonCli 
 		if err != nil {
 			return fmt.Errorf("error looking for python module (%w)", err)
 		}
-
-		//if *modulePresent && c.config.ModulePullPolicy == config.ModulePullPolicyIfNotPresent {
-		//	// remember we found the module if someone asks again later
-		//	c.modules[fullModuleName] = struct{}{}
-		//	// file is present, so we do not pull it
-		//	return nil
-		//}
-		//
-		//// else file is not present, or our pull policy is Always, so let's go
-		//c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
-		//c.logger.Debugf("pulling module: %s", fullModuleName)
-		//if err := pythonCli.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
-		//	return err
-		//}
 		if !*modulePresent || c.config.ModulePullPolicy == config.ModulePullPolicyAlways {
 			// file is not present, or our pull policy is Always, so let's go
 			c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
@@ -98,7 +84,6 @@ func (c *Connector) PullMod(_ context.Context, fullModuleName string, pythonCli 
 				return err
 			}
 		}
-
 		// remember we found the module if someone asks again later
 		c.modules[fullModuleName] = struct{}{}
 	}

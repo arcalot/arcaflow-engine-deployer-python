@@ -41,7 +41,7 @@ jobs:
           restore-keys: go-test-
       - name: install fio to test with fio plugin
         run: sudo apt-get -y install fio
-      - name: Run go test
+      - name: Run go test -race
         run: |
           which python
           set -euo pipefail

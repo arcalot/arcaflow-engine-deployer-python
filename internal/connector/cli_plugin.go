@@ -7,8 +7,7 @@ import (
 )
 
 type CliPlugin struct {
-	deployCommand *exec.Cmd
-	//stdErrBuff     *bytes.Buffer
+	deployCommand  *exec.Cmd
 	containerImage string
 	logger         log.Logger
 	stdin          io.WriteCloser
@@ -62,13 +61,10 @@ func (p *CliPlugin) KillAndClean() error {
 		return err
 	}
 
-	//if p.stdErrBuff.Len() > 0 {
-	//	p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
-	//}
 	slurp, err := io.ReadAll(p.stderr)
 	if err != nil {
 		return nil
 	}
-	p.logger.Debugf("%s", slurp)
+	p.logger.Debugf("python plugin module stderr: %s", slurp)
 	return nil
 }
