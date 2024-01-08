@@ -13,12 +13,16 @@ import (
 )
 
 type Connector struct {
-	config       *config.Config
+	// the working directory for this connector to persist filesystem
+	// side-effects (i.e. install a python module)
 	connectorDir string
-	logger       log.Logger
-	pythonCli    cliwrapper.CliWrapper
-	modules      map[string]struct{}
-	lock         sync.Mutex
+	// the set of python modules this connector has seen installed
+	// into its connector directory
+	modules   map[string]struct{}
+	pythonCli cliwrapper.CliWrapper
+	config    *config.Config
+	logger    log.Logger
+	lock      sync.Mutex
 }
 
 func NewConnector(config *config.Config, logger log.Logger, connectorDir string, pythonCli cliwrapper.CliWrapper) Connector {
