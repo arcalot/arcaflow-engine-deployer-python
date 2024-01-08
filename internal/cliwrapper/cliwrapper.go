@@ -180,7 +180,7 @@ func (p *cliWrapper) Venv(fullModuleName string) error {
 		p.logger.Debugf("venv creation stdout %s", output)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating venv (%w)", err)
+		return fmt.Errorf("error creating venv for %s (%w)", fullModuleName, err)
 	}
 	return nil
 }
