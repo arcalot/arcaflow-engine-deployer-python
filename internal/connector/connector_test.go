@@ -20,12 +20,6 @@ import (
 	"testing"
 )
 
-type TestModule struct {
-	Location string
-	StepID   string
-	Input    map[string]any
-}
-
 func GetPythonPath() (string, error) {
 	python3Path, errPython3 := exec.LookPath("python3")
 	if errPython3 != nil {
@@ -118,7 +112,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				"name":    "poisson-rate-submit",
 				"cleanup": "true",
 				"params": map[string]any{
-					"size":           "90KiB",
+					"size":           "500KiB",
 					"readwrite":      "randrw",
 					"ioengine":       "sync",
 					"iodepth":        32,
@@ -140,7 +134,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 			stepID:   "wait",
 			location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
 			input: map[string]any{
-				"seconds": "0.05",
+				"seconds": "0.5",
 			},
 		},
 	}
