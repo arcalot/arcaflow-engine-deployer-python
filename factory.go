@@ -55,7 +55,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 
 	pythonSemver := config.PythonSemVer
 	if pythonSemver == "" {
-		outputSemver, err := f.parsePythonVersion(pythonPath, err)
+		outputSemver, err := f.parsePythonVersion(pythonPath)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +88,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 
 // parsePythonVersion function gets the output of a command that asks the
 // Python executable for its semantic version string.
-func (f factory) parsePythonVersion(pythonPath string, err error) (*string, error) {
+func (f factory) parsePythonVersion(pythonPath string) (*string, error) {
 	versionCmd := exec.Command(pythonPath, "--version")
 	output, err := versionCmd.Output()
 	if err != nil {
