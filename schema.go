@@ -39,7 +39,7 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				schema.NewStringSchema(
 					schema.IntPointer(1),
 					schema.IntPointer(255),
-					regexp.MustCompile(`^v\d+\.\d+\.\d+$`)),
+					regexp.MustCompile(`^\d+\.\d+\.\d+$`)),
 				schema.NewDisplayValue(
 					schema.PointerTo("Python Semantic Version"),
 					schema.PointerTo("Python semantic version (i.e. 3.11.1) used on python path."),

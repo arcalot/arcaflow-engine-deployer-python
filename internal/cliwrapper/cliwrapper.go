@@ -46,7 +46,7 @@ func parseModuleNameGit(fullModuleName string, module *models.PythonModule) {
 
 func parseModuleName(fullModuleName string) (*models.PythonModule, error) {
 	pythonModule := models.NewPythonModule(fullModuleName)
-	gitRegex := "^([a-zA-Z0-9]+[-_\\.]*)+@git\\+http[s]{0,1}:\\/\\/([a-zA-Z0-9]+[-.\\/]*)+(@[a-z0-9]+)*$"
+	gitRegex := `^[a-zA-Z0-9]+([-_.][a-zA-Z0-9]+)*@git\+https?://[a-zA-Z0-9]+([-._/][a-zA-Z0-9]*)*(@[a-zA-Z0-9]+)?$`
 	matchGit, _ := regexp.MatchString(gitRegex, fullModuleName)
 	if !matchGit {
 		return nil, errors.New("wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]")
