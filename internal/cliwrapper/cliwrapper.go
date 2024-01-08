@@ -1,7 +1,6 @@
 package cliwrapper
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"go.arcalot.io/log/v2"
@@ -117,16 +116,13 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	// authentication causing pip to hang because pip calls `git clone` in
 	// a subprocess.
 	cmdPip.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-
-	var cmdPipStderr bytes.Buffer
-	cmdPip.Stderr = &cmdPipStderr
-
-	err = cmdPip.Run()
-	if cmdPipStderr.Len() > 0 {
-		p.logger.Warningf("pip install stderr: %s", cmdPipStderr.String())
+	
+	output, err := cmdPip.Output()
+	if len(output) > 0 {
+		p.logger.Debugf("pip install stdout: %s", output)
 	}
 	if err != nil {
-		return fmt.Errorf("error pip installing '%w'", err)
+		return fmt.Errorf("error pip installing (%w)", err)
 	}
 	return nil
 }
