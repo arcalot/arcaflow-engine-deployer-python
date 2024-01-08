@@ -1,7 +1,6 @@
 package cliwrapper
 
 import (
-	"errors"
 	"fmt"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/models"
@@ -48,7 +47,7 @@ func parseModuleName(fullModuleName string) (*models.PythonModule, error) {
 	gitRegex := `^[a-zA-Z0-9]+([-_.][a-zA-Z0-9]+)*@git\+https?://[a-zA-Z0-9]+([-._/][a-zA-Z0-9]*)*(@[a-zA-Z0-9]+)?$`
 	matchGit, _ := regexp.MatchString(gitRegex, fullModuleName)
 	if !matchGit {
-		return nil, errors.New("wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]")
+		return nil, fmt.Errorf("'%s' has wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]", fullModuleName)
 	}
 	parseModuleNameGit(fullModuleName, &pythonModule)
 	return &pythonModule, nil
