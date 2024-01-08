@@ -2,18 +2,18 @@ package connector
 
 import (
 	"go.arcalot.io/log/v2"
-	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"io"
 	"os/exec"
 )
 
 type CliPlugin struct {
-	deployCommand  *exec.Cmd
-	stdErrBuff     *cliwrapper.BufferThreadSafe
+	deployCommand *exec.Cmd
+	//stdErrBuff     *bytes.Buffer
 	containerImage string
 	logger         log.Logger
 	stdin          io.WriteCloser
 	stdout         io.ReadCloser
+	stderr         io.ReadCloser
 }
 
 func (p *CliPlugin) Write(b []byte) (n int, err error) {
@@ -39,6 +39,11 @@ func (p *CliPlugin) Close() error {
 	} else {
 		p.logger.Infof("stdout pipe successfully closed")
 	}
+	if err := p.stderr.Close(); err != nil {
+		p.logger.Infof("failed to close stderr pipe")
+	} else {
+		p.logger.Infof("stderr pipe successfully closed")
+	}
 	return nil
 }
 
@@ -56,8 +61,14 @@ func (p *CliPlugin) KillAndClean() error {
 	if err != nil {
 		return err
 	}
-	if p.stdErrBuff.Len() > 0 {
-		p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
+
+	//if p.stdErrBuff.Len() > 0 {
+	//	p.logger.Warningf("stderr present after plugin execution: '%s'", p.stdErrBuff.String())
+	//}
+	slurp, err := io.ReadAll(p.stderr)
+	if err != nil {
+		return nil
 	}
+	p.logger.Debugf("%s", slurp)
 	return nil
 }

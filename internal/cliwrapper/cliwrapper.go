@@ -12,42 +12,12 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 )
 
 type cliWrapper struct {
 	pythonFullPath string
 	connectorDir   string
 	logger         log.Logger
-}
-
-type BufferThreadSafe struct {
-	b    bytes.Buffer
-	lock sync.Mutex
-}
-
-func (b *BufferThreadSafe) Len() int {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	return b.b.Len()
-}
-
-func (b *BufferThreadSafe) Write(p []byte) (int, error) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	return b.b.Write(p)
-}
-
-func (b *BufferThreadSafe) String() string {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	return b.b.String()
-}
-
-func (b *BufferThreadSafe) Reset() {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	b.b.Reset()
 }
 
 const RunnableClassifier string = "Arcaflow :: Python Deployer :: Runnable"
@@ -168,7 +138,7 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	return nil
 }
 
-func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *BufferThreadSafe, error) {
+func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exec.Cmd, error) {
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -185,9 +155,7 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 
 	// use thread safe buffer for concurrent access to this buffer by
 	// the cli plugin's goroutine and some other goroutine
-	stdErrBuff := BufferThreadSafe{}
 	deployCommand := exec.Command(venvPython, args...) //nolint:gosec
-	deployCommand.Stderr = &stdErrBuff
 
 	// execute plugin in its own directory in case the plugin needs
 	// to write to its current working directory
@@ -201,14 +169,15 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
-	err = deployCommand.Start()
-	if stdErrBuff.Len() > 0 {
-		p.logger.Warningf("python process stderr already has content '%s'", stdErrBuff.String())
+	stderr, err := deployCommand.StderrPipe()
+	if err != nil {
+		return nil, nil, nil, nil, err
 	}
+	err = deployCommand.Start()
 	if err != nil {
 		return nil, nil, nil, nil, fmt.Errorf("error starting python process (%w)", err)
 	}
-	return stdin, stdout, deployCommand, &stdErrBuff, nil
+	return stdin, stdout, stderr, deployCommand, nil
 }
 
 // Venv creates a Python virtual environment for the given

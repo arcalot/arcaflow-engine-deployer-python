@@ -10,7 +10,6 @@ import (
 	"go.flow.arcalot.io/pluginsdk/atp"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	pythondeployer "go.flow.arcalot.io/pythondeployer"
-	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
 	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"go.flow.arcalot.io/pythondeployer/internal/connector"
 	"io"
@@ -260,43 +259,58 @@ func GetConnector(t *testing.T, configJSON string, workdir *string) (deployer.Co
 func TestConnector_PullMod(t *testing.T) {
 	logger := log.NewTestLogger(t)
 
-	// test if not present logic
-	cfg := config.Config{
-		WorkDir:          "",
-		PythonSemVer:     "",
-		PythonPath:       "",
-		ModulePullPolicy: config.ModulePullPolicyIfNotPresent,
+	testCases := map[string]struct {
+		pullpolicy      config.ModulePullPolicy
+		module_exists   bool
+		expected_result bool
+	}{
+		"ifnotpresent_exists": {
+			config.ModulePullPolicyIfNotPresent,
+			true,
+			false,
+		},
+		"ifnotpresent_not_exist": {
+			config.ModulePullPolicyIfNotPresent,
+			false,
+			true,
+		},
+		"always_exists": {
+			config.ModulePullPolicyAlways,
+			true,
+			true,
+		},
+		"always_not_exists": {
+			config.ModulePullPolicyAlways,
+			false,
+			true,
+		},
 	}
-	testPythonCli := &pythonCliStub{
-		PullPolicy:  cfg.ModulePullPolicy,
-		PyModExists: true,
-	}
-	connector_ := connector.NewConnector(
-		&cfg,
-		logger,
-		"",
-		testPythonCli)
-	ctx := context.Background()
-	err := connector_.PullMod(ctx, "", testPythonCli)
-	assert.NoError(t, err)
-	assert.Equals(t, testPythonCli.PyModPulled, false)
 
-	// test always logic
-	cfg.ModulePullPolicy = config.ModulePullPolicyAlways
-	testPythonCli = &pythonCliStub{
-		PullPolicy:  cfg.ModulePullPolicy,
-		PyModExists: true,
+	for name, tc := range testCases {
+		tc := tc
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			cfg := config.Config{
+				WorkDir:          "",
+				PythonSemVer:     "",
+				PythonPath:       "",
+				ModulePullPolicy: tc.pullpolicy,
+			}
+			testPythonCli := &pythonCliStub{
+				PullPolicy:  tc.pullpolicy,
+				PyModExists: tc.module_exists,
+			}
+			connector_ := connector.NewConnector(
+				&cfg,
+				logger,
+				"",
+				testPythonCli)
+			err := connector_.PullMod(
+				context.Background(), "", testPythonCli)
+			assert.NoError(t, err)
+			assert.Equals(t, testPythonCli.PyModPulled, tc.expected_result)
+		})
 	}
-	connector_ = connector.NewConnector(
-		&cfg,
-		logger,
-		"",
-		testPythonCli)
-	ctx = context.Background()
-
-	err = connector_.PullMod(ctx, "", testPythonCli)
-	assert.NoError(t, err)
-	assert.Equals(t, testPythonCli.PyModPulled, true)
 }
 
 type pythonCliStub struct {
@@ -313,7 +327,7 @@ func (p *pythonCliStub) PullModule(_ string, _ string) error {
 	return nil
 }
 
-func (p *pythonCliStub) Deploy(_ string, _ string) (io.WriteCloser, io.ReadCloser, *exec.Cmd, *cliwrapper.BufferThreadSafe, error) {
+func (p *pythonCliStub) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exec.Cmd, error) {
 	return nil, nil, nil, nil, nil
 }
 
