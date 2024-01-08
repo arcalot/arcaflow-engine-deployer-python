@@ -123,7 +123,7 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	// Otherwise, you can hit edge cases where git will wait for manual
 	// authentication causing pip to hang because pip calls `git clone` in
 	// a subprocess.
-	cmdPip.Env = append(cmdPip.Environ(), "GIT_TERMINAL_PROMPT=0")
+	cmdPip.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 
 	var cmdPipStderr bytes.Buffer
 	cmdPip.Stderr = &cmdPipStderr
