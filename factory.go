@@ -93,7 +93,6 @@ func (f factory) parsePythonVersion(pythonPath string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%v\n", output)
 	re, err := regexp.Compile(`\d+\.\d+\.\d+`)
 	if err != nil {
 		return nil, err
