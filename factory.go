@@ -19,11 +19,15 @@ import (
 
 // NewFactory creates a new factory for the Docker deployer.
 func NewFactory() deployer.ConnectorFactory[*config.Config] {
-	return &factory{connectorCounter: &atomic.Int64{}}
+	var connectorCounter int64
+	connectorCounter = 0
+	return &factory{
+		connectorCounter: &connectorCounter,
+	}
 }
 
 type factory struct {
-	connectorCounter *atomic.Int64
+	connectorCounter *int64
 }
 
 func (f factory) Name() string {
@@ -39,8 +43,8 @@ func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] 
 }
 
 func (f factory) NextConnectorIndex() int {
-	f.connectorCounter.Store(f.connectorCounter.Add(1))
-	return int(f.connectorCounter.Load())
+	atomic.StoreInt64(f.connectorCounter, atomic.AddInt64(f.connectorCounter, 1))
+	return int(atomic.LoadInt64(f.connectorCounter))
 }
 
 func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Connector, error) {
