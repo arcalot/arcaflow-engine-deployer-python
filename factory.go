@@ -58,7 +58,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 		if err != nil {
 			return nil, err
 		}
-		pythonSemver = *outputSemver
+		pythonSemver = outputSemver
 	}
 
 	connectorFilename := strings.Join([]string{
@@ -69,7 +69,9 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 
 	absWorkDir, err := filepath.Abs(config.WorkDir)
 	if err != nil {
-		return nil, fmt.Errorf("error determining absolute path for python deployer's working directory (%w)", err)
+		return nil, fmt.Errorf(
+			"error determining absolute path for python deployer's working directory (%w) given directory %s",
+			err, config.WorkDir)
 	}
 	connectorFilepath := filepath.Join(absWorkDir, connectorFilename)
 	err = os.MkdirAll(connectorFilepath, os.ModePerm)
@@ -87,18 +89,18 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 
 // parsePythonVersion function gets the output of a command that asks the
 // Python executable for its semantic version string.
-func (f factory) parsePythonVersion(pythonPath string) (*string, error) {
+func (f factory) parsePythonVersion(pythonPath string) (string, error) {
 	versionCmd := exec.Command(pythonPath, "--version")
 	output, err := versionCmd.Output()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	re, err := regexp.Compile(`\d+\.\d+\.\d+`)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	found := re.FindString(string(output))
-	return &found, nil
+	return found, nil
 }
 
 // binaryCheck validates there is a python binary in a valid absolute path

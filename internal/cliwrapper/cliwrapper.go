@@ -116,7 +116,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	// authentication causing pip to hang because pip calls `git clone` in
 	// a subprocess.
 	cmdPip.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
-	
+
 	output, err := cmdPip.Output()
 	if len(output) > 0 {
 		p.logger.Debugf("pip install stdout: %s", output)
@@ -174,7 +174,7 @@ func (p *cliWrapper) Venv(fullModuleName string) error {
 		return err
 	}
 	venvPath := filepath.Join(*modulePath, "venv")
-	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venvPath)
+	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", "--clear", venvPath)
 	output, err := cmdCreateVenv.Output()
 	if len(output) > 0 {
 		p.logger.Debugf("venv creation stdout %s", output)

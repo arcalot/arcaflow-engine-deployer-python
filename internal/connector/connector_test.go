@@ -21,15 +21,15 @@ import (
 )
 
 func GetPythonPath() (string, error) {
-	python3Path, errPython3 := exec.LookPath("python3")
-	if errPython3 != nil {
-		pythonPath, errPython := exec.LookPath("python")
-		if errPython != nil {
-			return "", fmt.Errorf("error getting Python3 (%s) and python (%s)", errPython3, errPython)
-		}
-		return pythonPath, nil
+	var errP3, errP error
+	if p, errP3 := exec.LookPath("python3"); errP3 == nil {
+		return p, nil
 	}
-	return python3Path, nil
+	if p, errP := exec.LookPath("python"); errP == nil {
+		return p, nil
+	}
+	return "", fmt.Errorf("errors getting paths for Python3 (%s) and python (%s)",
+		errP3.Error(), errP.Error())
 }
 
 const examplePluginNickname string = "pythonuser"
@@ -201,9 +201,9 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	// Wait for all the plugins to be done
 	wg.Wait()
 
-	t.Cleanup(func() {
-		assert.NoError(t, os.RemoveAll(rootDir))
-	})
+	//t.Cleanup(func() {
+	//	assert.NoError(t, os.RemoveAll(rootDir))
+	//})
 }
 
 func CreateWorkdir(t *testing.T) string {
