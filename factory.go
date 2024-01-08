@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync/atomic"
@@ -52,9 +53,18 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 		return &connector.Connector{}, fmt.Errorf("python binary check failed with error: %w", err)
 	}
 
+	pythonSemver := config.PythonSemVer
+	if pythonSemver == "" {
+		outputSemver, err := f.parsePythonVersion(pythonPath, err)
+		if err != nil {
+			return nil, err
+		}
+		pythonSemver = *outputSemver
+	}
+
 	connectorFilename := strings.Join([]string{
 		"connector",
-		strings.Replace(config.PythonSemVer, ".", "-", -1),
+		strings.Replace(pythonSemver, ".", "-", -1),
 		strconv.Itoa(f.NextConnectorIndex())},
 		"_")
 
@@ -74,6 +84,23 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 	cn := connector.NewConnector(
 		config, logger, connectorFilepath, pythonCli)
 	return &cn, nil
+}
+
+// parsePythonVersion function gets the output of a command that asks the
+// Python executable for its semantic version string.
+func (f factory) parsePythonVersion(pythonPath string, err error) (*string, error) {
+	versionCmd := exec.Command(pythonPath, "--version")
+	output, err := versionCmd.Output()
+	if err != nil {
+		return nil, err
+	}
+	fmt.Printf("%v\n", output)
+	re, err := regexp.Compile(`\d+\.\d+\.\d+`)
+	if err != nil {
+		return nil, err
+	}
+	found := re.FindString(string(output))
+	return &found, nil
 }
 
 // binaryCheck validates there is a python binary in a valid absolute path

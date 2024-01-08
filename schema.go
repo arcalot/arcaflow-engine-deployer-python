@@ -39,7 +39,7 @@ var Schema = schema.NewTypedScopeSchema[*config.Config](
 				schema.NewStringSchema(nil, nil, nil),
 				schema.NewDisplayValue(schema.PointerTo("Python Semantic Version"),
 					schema.PointerTo("Python semantic version (i.e. 3.11.1) used on python path"), nil),
-				true,
+				false,
 				nil,
 				nil,
 				nil,
