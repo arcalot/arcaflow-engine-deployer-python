@@ -151,6 +151,9 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	// idempotent test directory creation
 	_ = os.RemoveAll(rootDir)
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
+	t.Cleanup(func() {
+		assert.NoError(t, os.RemoveAll(rootDir))
+	})
 
 	factory := pythondeployer.NewFactory()
 	deployerSchema := factory.ConfigurationSchema()
@@ -200,10 +203,6 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	}
 	// Wait for all the plugins to be done
 	wg.Wait()
-
-	//t.Cleanup(func() {
-	//	assert.NoError(t, os.RemoveAll(rootDir))
-	//})
 }
 
 func CreateWorkdir(t *testing.T) string {

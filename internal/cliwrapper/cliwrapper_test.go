@@ -17,20 +17,20 @@ type TestModule struct {
 }
 
 func GetPythonPath() (string, error) {
-	python3Path, errPython3 := exec.LookPath("python3")
-	if errPython3 != nil {
-		pythonPath, errPython := exec.LookPath("python")
-		if errPython != nil {
-			return "", fmt.Errorf("error getting Python3 (%s) and python (%s)", errPython3, errPython)
-		}
-		return pythonPath, nil
+	var errP3, errP error
+	if p, errP3 := exec.LookPath("python3"); errP3 == nil {
+		return p, nil
 	}
-	return python3Path, nil
+	if p, errP := exec.LookPath("python"); errP == nil {
+		return p, nil
+	}
+	return "", fmt.Errorf("errors getting paths for Python3 (%s) and python (%s)",
+		errP3.Error(), errP.Error())
 }
 
-// Test pull module immediately returns an error on attempting
-// to find a nonexistent public repo instead of hanging, waiting
-// manual authentication.
+// Test the function PullModule immediately returns an error on
+// attempting to find a nonexistent public repo instead of hanging,
+// awaiting manual authentication.
 func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	testModule := TestModule{
 		Location: "nonexistent-repo@git+https://github.com/arcalot/nonexistent-repo.git",
@@ -43,6 +43,9 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	tempdir := "/tmp/pullmodule"
 	_ = os.RemoveAll(tempdir)
 	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
+	t.Cleanup(func() {
+		assert.NoError(t, os.RemoveAll(tempdir))
+	})
 
 	pythonPath, err := GetPythonPath()
 	assert.NoError(t, err)
@@ -53,8 +56,5 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 
 	err = wrap.PullModule(testModule.Location)
 	assert.Error(t, err)
-
-	t.Cleanup(func() {
-		assert.NoError(t, os.RemoveAll(tempdir))
-	})
+	assert.Contains(t, err.Error(), "error pip installing")
 }
