@@ -161,7 +161,7 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	}
 	err = deployCommand.Start()
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("error starting python process (%w)", err)
+		return nil, nil, nil, nil, fmt.Errorf("error starting python process for %s (%w)", fullModuleName, err)
 	}
 	return stdin, stdout, stderr, deployCommand, nil
 }
