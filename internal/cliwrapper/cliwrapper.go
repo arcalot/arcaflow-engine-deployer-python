@@ -85,7 +85,7 @@ func (p *cliWrapper) ModuleExists(fullModuleName string) (*bool, error) {
 	return &moduleExists, nil
 }
 
-func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error {
+func (p *cliWrapper) PullModule(fullModuleName string) error {
 	// every plugin python module gets its own python virtual environment
 	err := p.Venv(fullModuleName)
 	if err != nil {
@@ -93,13 +93,6 @@ func (p *cliWrapper) PullModule(fullModuleName string, pullPolicy string) error 
 	}
 
 	pipInstallArgs := []string{"install"}
-
-	// Pip's default behavior is to pull if the module is not present in the
-	// environment (i.e. IfNotPresent), so behavior is altered here when the
-	// user's pull policy is Always.
-	if pullPolicy == "Always" {
-		pipInstallArgs = append(pipInstallArgs, "--force-reinstall")
-	}
 
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
@@ -153,10 +146,7 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName, "--atp")
 
-	// use thread safe buffer for concurrent access to this buffer by
-	// the cli plugin's goroutine and some other goroutine
-	deployCommand := exec.Command(venvPython, args...) //nolint:gosec
-
+	deployCommand := exec.Command(venvPython, args...)
 	// execute plugin in its own directory in case the plugin needs
 	// to write to its current working directory
 	deployCommand.Dir = pluginDirAbsPath
@@ -187,16 +177,14 @@ func (p *cliWrapper) Venv(fullModuleName string) error {
 	if err != nil {
 		return err
 	}
-	venv_path := filepath.Join(*modulePath, "venv")
-	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venv_path)
-	var cmdCreateOut bytes.Buffer
-	cmdCreateVenv.Stderr = &cmdCreateOut
-	err = cmdCreateVenv.Run()
-	if cmdCreateOut.Len() > 0 {
-		p.logger.Warningf("venv creation stderr %s", cmdCreateOut.String())
+	venvPath := filepath.Join(*modulePath, "venv")
+	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", venvPath)
+	output, err := cmdCreateVenv.Output()
+	if len(output) > 0 {
+		p.logger.Debugf("venv creation stdout %s", output)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating venv '%w'", err)
+		return fmt.Errorf("venv creation stderr (%w)", err)
 	}
 	return nil
 }

@@ -51,7 +51,7 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, logger)
 	assert.NoError(t, wrap.Venv(testModule.Location))
 
-	err = wrap.PullModule(testModule.Location, "Always")
+	err = wrap.PullModule(testModule.Location)
 	assert.Error(t, err)
 
 	t.Cleanup(func() {

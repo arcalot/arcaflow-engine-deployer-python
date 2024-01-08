@@ -80,7 +80,7 @@ func (c *Connector) PullMod(_ context.Context, fullModuleName string, pythonCli 
 			// file is not present, or our pull policy is Always, so let's go
 			c.logger.Debugf("pull policy: %s", c.config.ModulePullPolicy)
 			c.logger.Debugf("pulling module: %s", fullModuleName)
-			if err := pythonCli.PullModule(fullModuleName, string(c.config.ModulePullPolicy)); err != nil {
+			if err := pythonCli.PullModule(fullModuleName); err != nil {
 				return err
 			}
 		}

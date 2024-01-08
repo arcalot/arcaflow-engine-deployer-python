@@ -6,7 +6,7 @@ import (
 )
 
 type CliWrapper interface {
-	PullModule(fullModuleName string, pullPolicy string) error
+	PullModule(fullModuleName string) error
 	Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exec.Cmd, error)
 	GetModulePath(fullModuleName string) (*string, error)
 	ModuleExists(fullModuleName string) (*bool, error)

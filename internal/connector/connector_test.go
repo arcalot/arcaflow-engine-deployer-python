@@ -315,7 +315,7 @@ type pythonCliStub struct {
 	PullPolicy  config.ModulePullPolicy
 }
 
-func (p *pythonCliStub) PullModule(_ string, _ string) error {
+func (p *pythonCliStub) PullModule(fullModuleName string) error {
 	moduleExists, _ := p.ModuleExists("")
 	if !*moduleExists || p.PullPolicy == config.ModulePullPolicyAlways {
 		p.PyModPulled = true
