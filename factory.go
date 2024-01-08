@@ -19,8 +19,7 @@ import (
 
 // NewFactory creates a new factory for the Docker deployer.
 func NewFactory() deployer.ConnectorFactory[*config.Config] {
-	var connectorCounter int64
-	connectorCounter = 0
+	connectorCounter := int64(0)
 	return &factory{
 		connectorCounter: &connectorCounter,
 	}
