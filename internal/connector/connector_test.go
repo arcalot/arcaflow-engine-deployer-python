@@ -130,6 +130,8 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				"name": "arca lot",
 			},
 		},
+		// no git commit hash is used here, so that the code executes
+		// the 'latest' branch of cliwrapper.GetModulePath()
 		"wait": {
 			stepID:   "wait",
 			location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
