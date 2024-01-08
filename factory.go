@@ -43,8 +43,7 @@ func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] 
 }
 
 func (f factory) NextConnectorIndex() int {
-	atomic.StoreInt64(f.connectorCounter, atomic.AddInt64(f.connectorCounter, 1))
-	return int(atomic.LoadInt64(f.connectorCounter))
+	return int(atomic.AddInt64(f.connectorCounter, 1))
 }
 
 func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Connector, error) {
