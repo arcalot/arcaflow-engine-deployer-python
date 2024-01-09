@@ -10,10 +10,10 @@ require (
 require (
 	github.com/fxamacker/cbor/v2 v2.5.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	go.arcalot.io/exex v0.0.0-20240109180346-c529af12bdc4 // indirect
 )
 
 require (
+	go.arcalot.io/exex v0.0.0-20240109180346-c529af12bdc4
 	go.arcalot.io/log/v2 v2.0.0
 	go.flow.arcalot.io/deployer v0.4.0
 	go.flow.arcalot.io/pluginsdk v0.5.1
