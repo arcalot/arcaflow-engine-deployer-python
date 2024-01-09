@@ -101,30 +101,13 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string, step
 // plugins concurrently that create side-effects local to their
 // filesystem, and one connector can pull multiple python modules
 func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T) {
+	logger := log.NewTestLogger(t)
 	type TestModule struct {
 		location string
 		stepID   string
 		input    map[string]any
 	}
 	testModules := map[string]TestModule{
-		"fio": {
-			stepID:   "workload",
-			location: "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191",
-			input: map[string]any{
-				"name":    "poisson-rate-submit",
-				"cleanup": "true",
-				"params": map[string]any{
-					"size":           "500KiB",
-					"readwrite":      "randrw",
-					"ioengine":       "sync",
-					"iodepth":        32,
-					"io_submit_mode": "inline",
-					"rate_iops":      50,
-					"rate_process":   "poisson",
-					"buffered":       0,
-				},
-			},
-		},
 		"template": {
 			stepID:   "hello-world",
 			location: "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@52d1a9559c60a615dbd97114572f16d70fa30b1b",
@@ -141,6 +124,31 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				"seconds": "0.5",
 			},
 		},
+	}
+
+	_, err := exec.LookPath("fio")
+	if err != nil {
+		logger.Warningf("Did not find Flexible IO Tester, 'fio', on system path. Please install it.")
+	} else {
+		logger.Infof("Found 'fio' on system path, adding fio plugin to test suite")
+		testModules["fio"] = TestModule{
+			stepID:   "workload",
+			location: "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191",
+			input: map[string]any{
+				"name":    "poisson-rate-submit",
+				"cleanup": "true",
+				"params": map[string]any{
+					"size":           "500KiB",
+					"readwrite":      "randrw",
+					"ioengine":       "sync",
+					"iodepth":        32,
+					"io_submit_mode": "inline",
+					"rate_iops":      50,
+					"rate_process":   "poisson",
+					"buffered":       0,
+				},
+			},
+		}
 	}
 
 	rootDir := "/tmp/multi-module"
@@ -171,8 +179,6 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	const n_plugin_copies = 10
 	wg := sync.WaitGroup{}
 	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
-
-	logger := log.NewTestLogger(t)
 
 	// Test for issues that might occur during concurrent creation of connectors
 	// and deployment of plugins
