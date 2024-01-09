@@ -123,7 +123,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 		p.logger.Debugf("pip install stdout: %s", output)
 	}
 	if err != nil {
-		return exex.AppendStderr(
+		return exex.CommandError(
 			err,
 			fmt.Sprintf("error pip installing %s", fullModuleName))
 	}
@@ -184,7 +184,7 @@ func (p *cliWrapper) Venv(fullModuleName string) error {
 		p.logger.Debugf("venv creation stdout %s", output)
 	}
 	if err != nil {
-		return exex.AppendStderr(err,
+		return exex.CommandError(err,
 			fmt.Sprintf("error creating venv for %s", fullModuleName))
 	}
 	return nil

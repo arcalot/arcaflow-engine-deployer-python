@@ -94,7 +94,7 @@ func (f factory) parsePythonVersion(pythonPath string) (string, error) {
 	versionCmd := exex.Command(pythonPath, "--version")
 	output, err := versionCmd.Output()
 	if err != nil {
-		return "", exex.AppendStderr(err, "error getting python version")
+		return "", exex.CommandError(err, "error getting python version")
 	}
 	re, err := regexp.Compile(`\d+\.\d+\.\d+`)
 	if err != nil {
