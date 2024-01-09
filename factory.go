@@ -42,8 +42,8 @@ func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] 
 	return Schema
 }
 
-func (f factory) NextConnectorIndex() int {
-	return int(atomic.AddInt64(f.connectorCounter, 1))
+func (f factory) NextConnectorIndex() int64 {
+	return atomic.AddInt64(f.connectorCounter, 1)
 }
 
 func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Connector, error) {
@@ -64,7 +64,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 	connectorFilename := strings.Join([]string{
 		"connector",
 		strings.Replace(pythonSemver, ".", "-", -1),
-		strconv.Itoa(f.NextConnectorIndex())},
+		strconv.FormatInt(f.NextConnectorIndex(), 10)},
 		"_")
 
 	absWorkDir, err := filepath.Abs(config.WorkDir)
