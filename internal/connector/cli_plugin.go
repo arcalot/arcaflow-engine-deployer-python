@@ -31,17 +31,17 @@ func (p *CliPlugin) Close() error {
 	if err := p.stdin.Close(); err != nil {
 		p.logger.Errorf("failed to close stdin pipe")
 	} else {
-		p.logger.Infof("stdin pipe successfully closed")
+		p.logger.Debugf("stdin pipe successfully closed")
 	}
 	if err := p.stdout.Close(); err != nil {
-		p.logger.Infof("failed to close stdout pipe")
+		p.logger.Warningf("failed to close stdout pipe")
 	} else {
-		p.logger.Infof("stdout pipe successfully closed")
+		p.logger.Debugf("stdout pipe successfully closed")
 	}
 	if err := p.stderr.Close(); err != nil {
-		p.logger.Infof("failed to close stderr pipe")
+		p.logger.Warningf("failed to close stderr pipe")
 	} else {
-		p.logger.Infof("stderr pipe successfully closed")
+		p.logger.Debugf("stderr pipe successfully closed")
 	}
 	return nil
 }
