@@ -41,12 +41,12 @@ jobs:
           restore-keys: go-test-
       - name: install fio to test with fio plugin
         run: sudo apt-get -y install fio
-      - name: Run go test -race
+      - name: Run go test
         run: |
           which python
           set -euo pipefail
           go generate
-          go test -coverprofile /tmp/coverage.out -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
+          go test -race -coverprofile /tmp/coverage.out -json -v ./... 2>&1 | tee /tmp/gotest.log | gotestfmt
           echo "# Code coverage summary" > /tmp/coverage.md
           echo "|File|Type|Coverage|" >> /tmp/coverage.md
           echo "|----|----|--------|" >> /tmp/coverage.md
