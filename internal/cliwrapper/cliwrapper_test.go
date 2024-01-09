@@ -56,7 +56,7 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 
 	err = wrap.PullModule(testModule.Location)
 	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "error pip installing")
+	assert.Contains(t, err.Error(), "pip installing")
 	var exErr *exex.ExitError
 	assert.Equals(t, errors.As(err, &exErr), true)
 	stderrStr := string(exErr.Stderr)

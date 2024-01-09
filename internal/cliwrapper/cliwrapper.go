@@ -124,7 +124,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err != nil {
 		return exex.CommandError(
 			err,
-			fmt.Sprintf("error in pip installation of %s", fullModuleName))
+			fmt.Sprintf("error in pip installing %s", fullModuleName))
 	}
 	return nil
 }
