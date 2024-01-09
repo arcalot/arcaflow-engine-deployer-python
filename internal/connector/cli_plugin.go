@@ -1,13 +1,13 @@
 package connector
 
 import (
+	"go.arcalot.io/exex"
 	"go.arcalot.io/log/v2"
 	"io"
-	"os/exec"
 )
 
 type CliPlugin struct {
-	deployCommand  *exec.Cmd
+	deployCommand  *exex.Cmd
 	containerImage string
 	logger         log.Logger
 	stdin          io.WriteCloser

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"go.arcalot.io/assert"
+	"go.arcalot.io/exex"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/atp"
@@ -323,7 +324,7 @@ func (p *pythonCliStub) PullModule(fullModuleName string) error {
 	return nil
 }
 
-func (p *pythonCliStub) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exec.Cmd, error) {
+func (p *pythonCliStub) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exex.Cmd, error) {
 	return nil, nil, nil, nil, nil
 }
 

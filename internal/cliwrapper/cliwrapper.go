@@ -8,7 +8,6 @@ import (
 	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -131,7 +130,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	return nil
 }
 
-func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exec.Cmd, error) {
+func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.WriteCloser, io.ReadCloser, io.ReadCloser, *exex.Cmd, error) {
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
 		return nil, nil, nil, nil, err
@@ -146,7 +145,7 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName, "--atp")
 
-	deployCommand := exec.Command(venvPython, args...)
+	deployCommand := exex.Command(venvPython, args...)
 	// execute plugin in its own directory in case the plugin needs
 	// to write to its current working directory
 	deployCommand.Dir = pluginDirAbsPath
