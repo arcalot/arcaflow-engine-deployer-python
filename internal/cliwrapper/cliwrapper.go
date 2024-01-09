@@ -48,7 +48,7 @@ func parseModuleName(fullModuleName string) (*models.PythonModule, error) {
 	gitRegex := `^[a-zA-Z0-9]+([-_.][a-zA-Z0-9]+)*@git\+https?://[a-zA-Z0-9]+([-._/][a-zA-Z0-9]*)*(@[a-zA-Z0-9]+)?$`
 	matchGit, _ := regexp.MatchString(gitRegex, fullModuleName)
 	if !matchGit {
-		return nil, fmt.Errorf("'%s' has wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]", fullModuleName)
+		return nil, fmt.Errorf("%q has wrong module name format, please use <module-name>@git+<repo_url>[@<commit_sha>]", fullModuleName)
 	}
 	parseModuleNameGit(fullModuleName, &pythonModule)
 	return &pythonModule, nil
@@ -109,7 +109,6 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	}
 
 	pipPath := filepath.Join(*modulePath, "venv/bin/pip")
-	//cmdPip := exec.Command(pipPath, pipInstallArgs...)
 	cmdPip := exex.Command(pipPath, pipInstallArgs...)
 
 	// Make git non-interactive, so that it never prompts for credentials.
@@ -125,7 +124,7 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	if err != nil {
 		return exex.CommandError(
 			err,
-			fmt.Sprintf("error pip installing %s", fullModuleName))
+			fmt.Sprintf("error in pip installation of %s", fullModuleName))
 	}
 	return nil
 }
