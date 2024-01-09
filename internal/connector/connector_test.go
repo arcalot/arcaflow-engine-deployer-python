@@ -263,6 +263,9 @@ func TestConnector_PullMod(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
+		// capture range variable because you cannot pass
+		// it as a parameter to the anonymous function,
+		// 'f', in t.Run(name string, f func(t *testing.T)
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
