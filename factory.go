@@ -2,8 +2,6 @@ package pythondeployer
 
 import (
 	"fmt"
-	"go.flow.arcalot.io/pythondeployer/internal/config"
-	"go.flow.arcalot.io/pythondeployer/internal/connector"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -12,10 +10,13 @@ import (
 	"strings"
 	"sync/atomic"
 
+	"go.arcalot.io/exex"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/deployer"
 	"go.flow.arcalot.io/pluginsdk/schema"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"go.flow.arcalot.io/pythondeployer/internal/config"
+	"go.flow.arcalot.io/pythondeployer/internal/connector"
 )
 
 // NewFactory creates a new factory for the Docker deployer.
@@ -90,10 +91,10 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 // parsePythonVersion function gets the output of a command that asks the
 // Python executable for its semantic version string.
 func (f factory) parsePythonVersion(pythonPath string) (string, error) {
-	versionCmd := exec.Command(pythonPath, "--version")
+	versionCmd := exex.Command(pythonPath, "--version")
 	output, err := versionCmd.Output()
 	if err != nil {
-		return "", err
+		return "", exex.AppendStderr(err, "error getting python version")
 	}
 	re, err := regexp.Compile(`\d+\.\d+\.\d+`)
 	if err != nil {

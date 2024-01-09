@@ -2,6 +2,8 @@ package cliwrapper
 
 import (
 	"fmt"
+	"go.arcalot.io/exex"
+
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/models"
 	"io"
@@ -108,7 +110,8 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 	}
 
 	pipPath := filepath.Join(*modulePath, "venv/bin/pip")
-	cmdPip := exec.Command(pipPath, pipInstallArgs...)
+	//cmdPip := exec.Command(pipPath, pipInstallArgs...)
+	cmdPip := exex.Command(pipPath, pipInstallArgs...)
 
 	// Make git non-interactive, so that it never prompts for credentials.
 	// Otherwise, you can hit edge cases where git will wait for manual
@@ -121,7 +124,9 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 		p.logger.Debugf("pip install stdout: %s", output)
 	}
 	if err != nil {
-		return fmt.Errorf("error pip installing %s (%w)", fullModuleName, err)
+		return exex.AppendStderr(
+			err,
+			fmt.Sprintf("error pip installing %s", fullModuleName))
 	}
 	return nil
 }
@@ -160,7 +165,8 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 	}
 	err = deployCommand.Start()
 	if err != nil {
-		return nil, nil, nil, nil, fmt.Errorf("error starting python process for %s (%w)", fullModuleName, err)
+		return nil, nil, nil, nil, fmt.Errorf(
+			"error starting python process for %s (%w)", fullModuleName, err)
 	}
 	return stdin, stdout, stderr, deployCommand, nil
 }
@@ -173,13 +179,15 @@ func (p *cliWrapper) Venv(fullModuleName string) error {
 		return err
 	}
 	venvPath := filepath.Join(*modulePath, "venv")
-	cmdCreateVenv := exec.Command(p.pythonFullPath, "-m", "venv", "--clear", venvPath)
+	cmdCreateVenv := exex.Command(p.pythonFullPath, "-m", "venv", "--clear", venvPath)
 	output, err := cmdCreateVenv.Output()
 	if len(output) > 0 {
 		p.logger.Debugf("venv creation stdout %s", output)
 	}
 	if err != nil {
-		return fmt.Errorf("error creating venv for %s (%w)", fullModuleName, err)
+		return exex.AppendStderr(err,
+			fmt.Sprintf("error creating venv for %s", fullModuleName))
 	}
 	return nil
+
 }

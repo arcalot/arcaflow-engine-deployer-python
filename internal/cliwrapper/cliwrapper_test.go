@@ -1,10 +1,12 @@
 package cliwrapper_test
 
 import (
+	"errors"
 	"fmt"
 	"go.arcalot.io/assert"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
+	"go.flow.arcalot.io/pythondeployer/internal/exex"
 	"os"
 	"os/exec"
 	"testing"
@@ -40,8 +42,7 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 		},
 	}
 
-	tempdir := "/tmp/pullmodule"
-	_ = os.RemoveAll(tempdir)
+	tempdir := "/tmp/pullmodule1"
 	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
 	t.Cleanup(func() {
 		assert.NoError(t, os.RemoveAll(tempdir))
@@ -52,9 +53,39 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 
 	logger := log.NewTestLogger(t)
 	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, logger)
-	assert.NoError(t, wrap.Venv(testModule.Location))
 
 	err = wrap.PullModule(testModule.Location)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "error pip installing")
+	var exErr *exex.ExitError
+	assert.Equals(t, errors.As(err, &exErr), true)
+	stderrStr := string(exErr.Stderr)
+	assert.Contains(t, stderrStr, "git clone")
+	assert.Contains(t, stderrStr, "exit code: 128")
+}
+
+func Test_PullModule_ErrorModuleNameFmt(t *testing.T) {
+	testModule := TestModule{
+		Location: "git+https://github.com/arcalot/arcaflow-plugin-wait.git@afdc2323805ffe2b37271f3a852a4ce7ac7379e1",
+		StepID:   "wait",
+		Input: map[string]any{
+			"seconds": 0.1,
+		},
+	}
+
+	tempdir := "/tmp/pullmodule2"
+	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
+	t.Cleanup(func() {
+		assert.NoError(t, os.RemoveAll(tempdir))
+	})
+
+	pythonPath, err := GetPythonPath()
+	assert.NoError(t, err)
+
+	logger := log.NewTestLogger(t)
+	wrap := cliwrapper.NewCliWrapper(pythonPath, tempdir, logger)
+
+	err = wrap.PullModule(testModule.Location)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "wrong module name format")
 }
