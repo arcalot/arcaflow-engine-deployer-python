@@ -19,7 +19,6 @@ import (
 	"os/exec"
 	"sync"
 	"testing"
-	//"go.arcalot.io/exex"
 )
 
 func GetPythonPath() (string, error) {
