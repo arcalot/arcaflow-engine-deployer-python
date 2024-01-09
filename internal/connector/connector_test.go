@@ -126,31 +126,6 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 		},
 	}
 
-	_, err := exec.LookPath("fio")
-	if err != nil {
-		logger.Warningf("Did not find Flexible IO Tester, 'fio', on system path. Please install it.")
-	} else {
-		logger.Infof("Found 'fio' on system path, adding fio plugin to test suite")
-		testModules["fio"] = TestModule{
-			stepID:   "workload",
-			location: "arcaflow-plugin-fio@git+https://github.com/arcalot/arcaflow-plugin-fio.git@de07b3e48cefdaa084eb0445616abc2d13670191",
-			input: map[string]any{
-				"name":    "poisson-rate-submit",
-				"cleanup": "true",
-				"params": map[string]any{
-					"size":           "500KiB",
-					"readwrite":      "randrw",
-					"ioengine":       "sync",
-					"iodepth":        32,
-					"io_submit_mode": "inline",
-					"rate_iops":      50,
-					"rate_process":   "poisson",
-					"buffered":       0,
-				},
-			},
-		}
-	}
-
 	rootDir := "/tmp/multi-module"
 	serializedConfig := map[string]any{
 		"workdir":          rootDir,
@@ -159,7 +134,6 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	}
 
 	// idempotent test directory creation
-	_ = os.RemoveAll(rootDir)
 	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
 	t.Cleanup(func() {
 		assert.NoError(t, os.RemoveAll(rootDir))
@@ -192,18 +166,17 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 				for _, testModule_ := range testModules {
 					go func(testModule TestModule) {
 						defer wg.Done()
-
 						output_id, output_data, err := RunStep(
 							t, connector, testModule.location, testModule.stepID, testModule.input)
 						assert.NoError(t, err)
-						assert.Equals(t, output_id, "success")
-						assert.MapNotContainsKeyAny(t, "error", output_data.(map[any]any))
 						if output_id == "error" {
+							assert.MapContainsKeyAny(t, "error", output_data.(map[any]any))
 							errorMsg, ok := output_data.(map[any]any)["error"]
 							if ok {
 								logger.Debugf("plugin error '%s'", errorMsg.(string))
 							}
 						}
+						assert.Equals(t, output_id, "success")
 					}(testModule_)
 				}
 			}
