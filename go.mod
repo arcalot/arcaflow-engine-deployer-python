@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	go.arcalot.io/exex v0.0.0-20240109180346-c529af12bdc4
+	go.arcalot.io/exex v0.1.0
 	go.arcalot.io/log/v2 v2.0.0
 	go.flow.arcalot.io/deployer v0.4.0
 	go.flow.arcalot.io/pluginsdk v0.5.1
