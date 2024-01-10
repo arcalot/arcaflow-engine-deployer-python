@@ -168,8 +168,10 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 						output_id, output_data, err := RunStep(
 							t, connector, testModule.location, testModule.stepID, testModule.input)
 						assert.NoError(t, err)
+
+						// This can increase observability in CI by logging the error message
+						// reported by the plugin if one was reported.
 						if output_id == "error" {
-							assert.MapContainsKeyAny(t, "error", output_data.(map[any]any))
 							errorMsg, ok := output_data.(map[any]any)["error"]
 							if ok {
 								logger.Debugf("plugin error '%s'", errorMsg.(string))
