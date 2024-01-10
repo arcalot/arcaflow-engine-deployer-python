@@ -31,11 +31,11 @@ func GetPythonPath() (string, error) {
 }
 
 // Test the function PullModule immediately returns an error on
-// attempting to find a nonexistent public repo instead of hanging,
-// awaiting manual authentication.
+// attempting to find a python module from a nonexistent public repo
+// instead of hanging, awaiting manual authentication.
 func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	testModule := TestModule{
-		Location: "nonexistent-repo@git+https://github.com/arcalot/nonexistent-repo.git",
+		Location: "nonexistent@git+https://github.com/arcalot/nonexistent.git",
 		StepID:   "wait",
 		Input: map[string]any{
 			"seconds": 0.1,
@@ -64,6 +64,8 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	assert.Contains(t, stderrStr, "exit code: 128")
 }
 
+// Test the function PullModule returns a module name format error
+// when the location provided included a typo.
 func Test_PullModule_ErrorModuleNameFmt(t *testing.T) {
 	testModule := TestModule{
 		Location: "git+https://github.com/arcalot/arcaflow-plugin-wait.git@afdc2323805ffe2b37271f3a852a4ce7ac7379e1",
