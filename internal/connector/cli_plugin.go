@@ -29,7 +29,7 @@ func (p *CliPlugin) Close() error {
 	}
 
 	if err := p.stdin.Close(); err != nil {
-		p.logger.Errorf("failed to close stdin pipe")
+		p.logger.Warningf("failed to close stdin pipe")
 	} else {
 		p.logger.Debugf("stdin pipe successfully closed")
 	}

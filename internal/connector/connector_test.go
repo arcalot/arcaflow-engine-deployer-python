@@ -39,7 +39,7 @@ var inOutConfigGitPullIfNotPresent = `
 {
 	"workdir":"/tmp",
 	"modulePullPolicy":"IfNotPresent",
-    "pythonSemver": "3.0.0"
+        "pythonSemver": "3.0.0"
 }
 `
 
@@ -262,21 +262,23 @@ func TestConnector_PullMod(t *testing.T) {
 	}
 
 	for name, tc := range testCases {
-		// capture range variable because you cannot pass
-		// it as a parameter to the anonymous function,
-		// 'f', in t.Run(name string, f func(t *testing.T)
-		tc := tc
+		// The call to t.Parallel() means that referencing the tc
+		// from the outer scope won't produce the proper value, so
+		// we need to place it in a variable, localTc, scoped inside
+		// the loop body.
+		localTc := tc
+
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			cfg := config.Config{
 				WorkDir:          "",
 				PythonSemVer:     "",
 				PythonPath:       "",
-				ModulePullPolicy: tc.pullpolicy,
+				ModulePullPolicy: localTc.pullpolicy,
 			}
 			testPythonCli := &pythonCliStub{
-				PullPolicy:  tc.pullpolicy,
-				PyModExists: tc.module_exists,
+				PullPolicy:  localTc.pullpolicy,
+				PyModExists: localTc.module_exists,
 			}
 			connector_ := connector.NewConnector(
 				&cfg,
@@ -286,7 +288,7 @@ func TestConnector_PullMod(t *testing.T) {
 			err := connector_.PullMod(
 				context.Background(), "", testPythonCli)
 			assert.NoError(t, err)
-			assert.Equals(t, testPythonCli.PyModPulled, tc.expected_result)
+			assert.Equals(t, testPythonCli.PyModPulled, localTc.expected_result)
 		})
 	}
 }
