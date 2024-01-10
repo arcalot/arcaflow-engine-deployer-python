@@ -1,6 +1,7 @@
 package pythondeployer
 
 import (
+	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"regexp"
 
 	"go.flow.arcalot.io/pluginsdk/schema"
@@ -8,8 +9,8 @@ import (
 )
 
 // Schema describes the deployment options of the Docker deployment mechanism.
-var Schema = schema.NewTypedScopeSchema[*Config](
-	schema.NewStructMappedObjectSchema[*Config](
+var Schema = schema.NewTypedScopeSchema[*config.Config](
+	schema.NewStructMappedObjectSchema[*config.Config](
 		"Config",
 		map[string]*schema.PropertySchema{
 			"pythonPath": schema.NewPropertySchema(
@@ -25,8 +26,25 @@ var Schema = schema.NewTypedScopeSchema[*Config](
 			),
 			"workdir": schema.NewPropertySchema(
 				schema.NewStringSchema(nil, nil, nil),
-				schema.NewDisplayValue(schema.PointerTo("Workdir Path"),
-					schema.PointerTo("Provides the directory where the modules virtual environments will be stored"), nil),
+				schema.NewDisplayValue(schema.PointerTo("Temporary Directory Path"),
+					schema.PointerTo("Provides the root directory where the modules virtual environments will be stored"), nil),
+				false,
+				nil,
+				nil,
+				nil,
+				nil,
+				nil,
+			),
+			"pythonSemver": schema.NewPropertySchema(
+				schema.NewStringSchema(
+					schema.IntPointer(1),
+					schema.IntPointer(255),
+					regexp.MustCompile(`^\d+\.\d+\.\d+$`)),
+				schema.NewDisplayValue(
+					schema.PointerTo("Python Semantic Version"),
+					schema.PointerTo("Python Semantic Version (i.e. 3.11.1) used on python path."),
+					nil,
+				),
 				false,
 				nil,
 				nil,
@@ -36,15 +54,15 @@ var Schema = schema.NewTypedScopeSchema[*Config](
 			),
 			"modulePullPolicy": schema.NewPropertySchema(
 				schema.NewStringEnumSchema(map[string]*schema.DisplayValue{
-					string(ModulePullPolicyAlways):       {NameValue: schema.PointerTo("Always")},
-					string(ModulePullPolicyIfNotPresent): {NameValue: schema.PointerTo("If not present")},
+					string(config.ModulePullPolicyAlways):       {NameValue: schema.PointerTo("Always")},
+					string(config.ModulePullPolicyIfNotPresent): {NameValue: schema.PointerTo("If not present")},
 				}),
 				schema.NewDisplayValue(schema.PointerTo("Module pull policy"), schema.PointerTo("When to pull the python module."), nil),
 				false,
 				nil,
 				nil,
 				nil,
-				schema.PointerTo(util.JSONEncode(string(ModulePullPolicyIfNotPresent))),
+				schema.PointerTo(util.JSONEncode(string(config.ModulePullPolicyIfNotPresent))),
 				nil,
 			),
 		},
