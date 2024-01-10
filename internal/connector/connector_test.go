@@ -37,9 +37,9 @@ const examplePluginNickname string = "pythonuser"
 
 var inOutConfigGitPullIfNotPresent = `
 {
-	"workdir":"/tmp",
-	"modulePullPolicy":"IfNotPresent",
-        "pythonSemver": "3.0.0"
+    "workdir":"/tmp",
+    "modulePullPolicy":"IfNotPresent",
+    "pythonSemver": "3.0.0"
 }
 `
 
