@@ -27,7 +27,7 @@ func GetPythonPath() (string, error) {
 		return p, nil
 	}
 	return "", fmt.Errorf("errors getting paths for Python3 (%s) and python (%s)",
-		errP3.Error(), errP.Error())
+		errP3.Error(), errP.Error()) //nolint:govet // errP3 and errP will not be nil if this line is reached
 }
 
 // Test the function PullModule immediately returns an error on
@@ -36,10 +36,6 @@ func GetPythonPath() (string, error) {
 func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	testModule := TestModule{
 		Location: "nonexistent@git+https://github.com/arcalot/nonexistent.git",
-		StepID:   "wait",
-		Input: map[string]any{
-			"seconds": 0.1,
-		},
 	}
 
 	tempdir := "/tmp/pullmodule1"
@@ -69,10 +65,6 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 func Test_PullModule_ErrorModuleNameFmt(t *testing.T) {
 	testModule := TestModule{
 		Location: "git+https://github.com/arcalot/arcaflow-plugin-wait.git@afdc2323805ffe2b37271f3a852a4ce7ac7379e1",
-		StepID:   "wait",
-		Input: map[string]any{
-			"seconds": 0.1,
-		},
 	}
 
 	tempdir := "/tmp/pullmodule2"

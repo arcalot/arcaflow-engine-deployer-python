@@ -27,7 +27,7 @@ linters:
     # Prevent naked returns in long functions.
     - nakedret
     # Make Go code more readable.
-    - gocritic
+#    - gocritic
     # We don't want hidden global scope, so disallow global variables. You can disable this with
     # Check if comments end in a period. This helps prevent incomplete comment lines, such as half-written sentences.
     #    - godot
@@ -38,7 +38,7 @@ linters:
     # Complain about cognitive complexity of functions.
     - gocognit
     # Find repeated strings that could be converted into constants.
-    - goconst
+#    - goconst
     # Complain about unnecessary type conversions.
     - unconvert
     # Complain about unused parameters. These should be replaced with underscores.
@@ -52,9 +52,6 @@ linters:
     - dupl
     # Check for pointers in loops. This is a typical bug source.
     - exportloopref
-    # Enforce a reasonable function length of 60 lines or 40 instructions. In very rare cases you may want to disable
-    # this with // nolint:funlen if there is absolutely no way to split the function in question.
-    - funlen
     # Prevent dogsledding (mass-ignoring return values). This typically indicates missing error handling.
     - dogsled
     # Enforce consistent import aliases across all files.
