@@ -28,7 +28,6 @@ linters:
     - nakedret
     # Make Go code more readable.
 #    - gocritic
-    # We don't want hidden global scope, so disallow global variables. You can disable this with
     # Check if comments end in a period. This helps prevent incomplete comment lines, such as half-written sentences.
     #    - godot
     # Complain about comments as these indicate incomplete code.
