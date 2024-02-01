@@ -18,8 +18,7 @@ jobs:
       - name: Run golangci-lint
         uses: golangci/golangci-lint-action@3a919529898de77ec3da873e3063ca4b10e7f5cc # v3
         with:
-          # Hard-coding version due to this bug: https://github.com/golangci/golangci-lint-action/issues/535
-          version: v1.52.2
+          version: v1.55.2
   test:
     name: go test
     runs-on: ubuntu-latest
@@ -29,15 +28,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4
       - name: Set up Go
-        uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4
+        uses: actions/setup-go@v5
         with:
-          go-version: 1.18
+          go-version: 1.21.6
       - uses: actions/setup-python@65d7f2d534ac1bc67fcd62888c5f4f3d2cb2b236 # v4
         with:
           python-version: 'pypy3.9'
       - name: Set up gotestfmt
         uses: GoTestTools/gotestfmt-action@v2
-      - uses: actions/cache@e12d46a63a90f2fae62d114769bbf2a179198b5c # v3
+      - uses: actions/cache@v4
         with:
           path: |
             ~/go/pkg/mod
@@ -60,7 +59,7 @@ jobs:
           go tool cover -func /tmp/coverage.out
           echo "::endgroup::"
       - name: Upload test log
-        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32 # v3
+        uses: actions/upload-artifact@v4
         if: always()
         with:
           name: test-results

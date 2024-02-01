@@ -63,7 +63,7 @@ func (p *CliPlugin) KillAndClean() error {
 
 	slurp, err := io.ReadAll(p.stderr)
 	if err != nil {
-		return nil
+		return err
 	}
 	p.logger.Debugf("python plugin module stderr: %s", slurp)
 	return nil

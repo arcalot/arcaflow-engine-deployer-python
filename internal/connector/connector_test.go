@@ -30,7 +30,7 @@ func GetPythonPath() (string, error) {
 		return p, nil
 	}
 	return "", fmt.Errorf("errors getting paths for Python3 (%s) and python (%s)",
-		errP3.Error(), errP.Error())
+		errP3.Error(), errP.Error()) //nolint:govet // errP3 and errP will not be nil if this line is reached
 }
 
 const examplePluginNickname string = "pythonuser"
@@ -202,7 +202,7 @@ func RandString(n int) string {
 	var chars = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	b := make([]rune, n)
 	for i := range b {
-		b[i] = chars[rand.Intn(len(chars))]
+		b[i] = chars[rand.Intn(len(chars))] //nolint:gosec // not for a security credential
 	}
 	return string(b)
 }
