@@ -90,6 +90,7 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string, step
 		receivedSignalsChan,
 		emittedSignalsChan,
 	)
+	close(receivedSignalsChan) // Necessary to prevent a deadlock
 	assert.NoError(t, atpClient.Close())
 
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
