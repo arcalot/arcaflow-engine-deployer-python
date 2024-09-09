@@ -1,6 +1,6 @@
 module go.flow.arcalot.io/pythondeployer
 
-go 1.21
+go 1.22.0
 
 require (
 	go.arcalot.io/assert v1.8.0
@@ -10,8 +10,8 @@ require (
 require (
 	github.com/fxamacker/cbor/v2 v2.7.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/term v0.23.0 // indirect
+	golang.org/x/sys v0.25.0 // indirect
+	golang.org/x/term v0.24.0 // indirect
 )
 
 require (
