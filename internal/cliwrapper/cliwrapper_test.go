@@ -3,13 +3,14 @@ package cliwrapper_test
 import (
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
+	"testing"
+
 	"go.arcalot.io/assert"
 	"go.arcalot.io/exex"
 	"go.arcalot.io/log/v2"
 	"go.flow.arcalot.io/pythondeployer/internal/cliwrapper"
-	"os"
-	"os/exec"
-	"testing"
 )
 
 type TestModule struct {
@@ -64,7 +65,7 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 // when the location provided included a typo.
 func Test_PullModule_ErrorModuleNameFmt(t *testing.T) {
 	testModule := TestModule{
-		Location: "git+https://github.com/arcalot/arcaflow-plugin-wait.git@afdc2323805ffe2b37271f3a852a4ce7ac7379e1",
+		Location: "git+https://github.com/arcalot/arcaflow-plugin-utilities.git@0.6.1",
 	}
 
 	tempdir := "/tmp/pullmodule2"
