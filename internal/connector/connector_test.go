@@ -4,6 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"math/rand"
+	"os"
+	"os/exec"
+	"sync"
+	"testing"
+
 	"go.arcalot.io/assert"
 	"go.arcalot.io/exex"
 	"go.arcalot.io/log/v2"
@@ -13,12 +20,6 @@ import (
 	pythondeployer "go.flow.arcalot.io/pythondeployer"
 	"go.flow.arcalot.io/pythondeployer/internal/config"
 	"go.flow.arcalot.io/pythondeployer/internal/connector"
-	"io"
-	"math/rand"
-	"os"
-	"os/exec"
-	"sync"
-	"testing"
 )
 
 func GetPythonPath() (string, error) {
@@ -119,9 +120,9 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 		// the 'latest' branch of cliwrapper.GetModulePath()
 		"wait": {
 			stepID:   "wait",
-			location: "arcaflow-plugin-wait@git+https://github.com/arcalot/arcaflow-plugin-wait.git",
+			location: "arcaflow-plugin-utilities@git+https://github.com/arcalot/arcaflow-plugin-utilities.git",
 			input: map[string]any{
-				"seconds": "0.5",
+				"wait_time_ms": "500",
 			},
 		},
 	}
