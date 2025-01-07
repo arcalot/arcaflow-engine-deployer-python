@@ -75,7 +75,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 			err, config.WorkDir)
 	}
 	connectorFilepath := filepath.Join(absWorkDir, connectorFilename)
-	err = os.MkdirAll(connectorFilepath, os.ModePerm)
+	err = os.MkdirAll(connectorFilepath, 0750)
 	if err != nil {
 		return nil, fmt.Errorf(
 			"error creating temporary directory for python connector (%w)", err)
