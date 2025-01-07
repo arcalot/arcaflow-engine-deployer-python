@@ -100,7 +100,7 @@ func (c *Connector) CreatePluginDir(pluginDir string) (*string, error) {
 		}
 	} else {
 		workdir = filepath.Join(c.connectorDir, filepath.Clean(pluginDir))
-		err = os.MkdirAll(workdir, os.ModePerm)
+		err = os.MkdirAll(workdir, 0750)
 		if err != nil {
 			return nil, err
 		}

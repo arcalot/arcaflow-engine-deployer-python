@@ -40,7 +40,7 @@ func Test_PullModule_NonexistentGitLocation(t *testing.T) {
 	}
 
 	tempdir := "/tmp/pullmodule1"
-	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
+	assert.NoError(t, os.MkdirAll(tempdir, 0750))
 	t.Cleanup(func() {
 		assert.NoError(t, os.RemoveAll(tempdir))
 	})
@@ -69,7 +69,7 @@ func Test_PullModule_ErrorModuleNameFmt(t *testing.T) {
 	}
 
 	tempdir := "/tmp/pullmodule2"
-	assert.NoError(t, os.MkdirAll(tempdir, os.ModePerm))
+	assert.NoError(t, os.MkdirAll(tempdir, 0750))
 	t.Cleanup(func() {
 		assert.NoError(t, os.RemoveAll(tempdir))
 	})

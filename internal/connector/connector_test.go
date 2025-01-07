@@ -135,7 +135,7 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	}
 
 	// idempotent test directory creation
-	assert.NoError(t, os.MkdirAll(rootDir, os.ModePerm))
+	assert.NoError(t, os.MkdirAll(rootDir, 0750))
 	t.Cleanup(func() {
 		assert.NoError(t, os.RemoveAll(rootDir))
 	})
@@ -195,7 +195,7 @@ func CreateWorkdir(t *testing.T) string {
 		err := os.RemoveAll(workdir)
 		assert.NoError(t, err)
 	}
-	err := os.Mkdir(workdir, os.ModePerm)
+	err := os.Mkdir(workdir, 0750)
 	assert.NoError(t, err)
 	return workdir
 }
