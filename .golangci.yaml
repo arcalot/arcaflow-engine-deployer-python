@@ -85,7 +85,6 @@ linters-settings:
           - golang.org/
   govet:
     enable-all: true
-    check-shadowing: false
     disable:
       # We don't care about variable shadowing.
       - shadow
