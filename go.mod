@@ -2,7 +2,7 @@ module go.flow.arcalot.io/pythondeployer
 
 go 1.23.0
 
-toolchain go1.23.5
+toolchain go1.24.0
 
 require (
 	go.arcalot.io/assert v1.8.0
@@ -20,5 +20,5 @@ require (
 	go.arcalot.io/exex v0.2.0
 	go.arcalot.io/log/v2 v2.2.0
 	go.flow.arcalot.io/deployer v0.6.1
-	go.flow.arcalot.io/pluginsdk v0.14.2
+	go.flow.arcalot.io/pluginsdk v0.14.3
 )
