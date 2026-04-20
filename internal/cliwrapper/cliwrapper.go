@@ -36,10 +36,10 @@ func NewCliWrapper(
 func parseModuleNameGit(fullModuleName string, module *models.PythonModule) {
 	nameSourceVersion := strings.Split(fullModuleName, "@")
 	source := strings.Replace(nameSourceVersion[1], "git+", "", 1)
-	(*module).ModuleName = &nameSourceVersion[0]
-	(*module).Repo = &source
+	module.ModuleName = &nameSourceVersion[0]
+	module.Repo = &source
 	if len(nameSourceVersion) == 3 {
-		(*module).ModuleVersion = &nameSourceVersion[2]
+		module.ModuleVersion = &nameSourceVersion[2]
 	}
 }
 
@@ -91,7 +91,8 @@ func (p *cliWrapper) PullModule(fullModuleName string) error {
 		return err
 	}
 
-	pipInstallArgs := []string{"install"}
+	pipInstallArgs := make([]string, 0, 2)
+	pipInstallArgs = append(pipInstallArgs, "install")
 
 	pythonModule, err := parseModuleName(fullModuleName)
 	if err != nil {
@@ -140,7 +141,8 @@ func (p *cliWrapper) Deploy(fullModuleName string, pluginDirAbsPath string) (io.
 		return nil, nil, nil, nil, err
 	}
 	venvPython := filepath.Join(*modulePath, "venv/bin/python")
-	args := []string{"-m"}
+	args := make([]string, 0, 3)
+	args = append(args, "-m")
 	moduleInvokableName := strings.ReplaceAll(*pythonModule.ModuleName, "-", "_")
 	args = append(args, moduleInvokableName, "--atp")
 

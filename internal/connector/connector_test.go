@@ -97,18 +97,14 @@ func RunStep(t *testing.T, connector deployer.Connector, moduleName string, step
 	return executionResult.OutputID, executionResult.OutputData, executionResult.Error
 }
 
-// This test ensures that this deployer can create and execute
-// connectors concurrently, and that those connectors can deploy
-// plugins concurrently that create side-effects local to their
-// filesystem, and one connector can pull multiple python modules
-func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T) {
-	logger := log.NewTestLogger(t)
-	type TestModule struct {
-		location string
-		stepID   string
-		input    map[string]any
-	}
-	testModules := map[string]TestModule{
+type testModule struct {
+	location string
+	stepID   string
+	input    map[string]any
+}
+
+func concurrentTestModules() map[string]testModule {
+	return map[string]testModule{
 		"template": {
 			stepID:   "hello-world",
 			location: "arcaflow-plugin-template-python@git+https://github.com/arcalot/arcaflow-plugin-template-python.git@52d1a9559c60a615dbd97114572f16d70fa30b1b",
@@ -126,6 +122,45 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 			},
 		},
 	}
+}
+
+func runConcurrentPlugins(
+	t *testing.T,
+	logger log.Logger,
+	conn deployer.Connector,
+	testModules map[string]testModule,
+	nPluginCopies int,
+	wg *sync.WaitGroup,
+) {
+	for k := 0; k < nPluginCopies; k++ {
+		for _, testModule_ := range testModules {
+			go func(tm testModule) {
+				defer wg.Done()
+				outputID, outputData, err := RunStep(
+					t, conn, tm.location, tm.stepID, tm.input)
+				assert.NoError(t, err)
+
+				// This can increase observability in CI by logging the error message
+				// reported by the plugin if one was reported.
+				if outputID == "error" {
+					errorMsg, ok := outputData.(map[any]any)["error"]
+					if ok {
+						logger.Debugf("plugin error '%s'", errorMsg.(string))
+					}
+				}
+				assert.Equals(t, outputID, "success")
+			}(testModule_)
+		}
+	}
+}
+
+// This test ensures that this deployer can create and execute
+// connectors concurrently, and that those connectors can deploy
+// plugins concurrently that create side-effects local to their
+// filesystem, and one connector can pull multiple python modules.
+func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T) {
+	logger := log.NewTestLogger(t)
+	testModules := concurrentTestModules()
 
 	rootDir := "/tmp/multi-module"
 	serializedConfig := map[string]any{
@@ -150,40 +185,18 @@ func TestDeployConcurrent_ConnectorsAndPluginsWithDifferentModules(t *testing.T)
 	unserializedConfig.PythonPath = pythonPath
 
 	// Choose how many connectors and plugins to make
-	const n_connectors = 4
-	const n_plugin_copies = 10
+	const nConnectors = 4
+	const nPluginCopies = 10
 	wg := sync.WaitGroup{}
-	wg.Add(n_connectors * len(testModules) * n_plugin_copies)
+	wg.Add(nConnectors * len(testModules) * nPluginCopies)
 
 	// Test for issues that might occur during concurrent creation of connectors
 	// and deployment of plugins
-	// Make a goroutine for each connector
-	for j := 0; j < n_connectors; j++ {
+	for j := 0; j < nConnectors; j++ {
 		connector_, err := factory.Create(unserializedConfig, log.NewTestLogger(t))
 		assert.NoError(t, err)
 
-		go func(connector deployer.Connector) {
-			for k := 0; k < n_plugin_copies; k++ {
-				for _, testModule_ := range testModules {
-					go func(testModule TestModule) {
-						defer wg.Done()
-						output_id, output_data, err := RunStep(
-							t, connector, testModule.location, testModule.stepID, testModule.input)
-						assert.NoError(t, err)
-
-						// This can increase observability in CI by logging the error message
-						// reported by the plugin if one was reported.
-						if output_id == "error" {
-							errorMsg, ok := output_data.(map[any]any)["error"]
-							if ok {
-								logger.Debugf("plugin error '%s'", errorMsg.(string))
-							}
-						}
-						assert.Equals(t, output_id, "success")
-					}(testModule_)
-				}
-			}
-		}(connector_)
+		go runConcurrentPlugins(t, logger, connector_, testModules, nPluginCopies, &wg)
 	}
 	// Wait for all the plugins to be done
 	wg.Wait()

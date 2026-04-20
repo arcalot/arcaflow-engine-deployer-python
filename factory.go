@@ -31,12 +31,14 @@ type factory struct {
 	connectorCounter *int64
 }
 
+const deployerName = "python"
+
 func (f factory) Name() string {
-	return "python"
+	return deployerName
 }
 
 func (f factory) DeploymentType() deployer.DeploymentType {
-	return "python"
+	return deployerName
 }
 
 func (f factory) ConfigurationSchema() *schema.TypedScopeSchema[*config.Config] {
@@ -64,7 +66,7 @@ func (f factory) Create(config *config.Config, logger log.Logger) (deployer.Conn
 
 	connectorFilename := strings.Join([]string{
 		"connector",
-		strings.Replace(pythonSemver, ".", "-", -1),
+		strings.ReplaceAll(pythonSemver, ".", "-"),
 		strconv.FormatInt(f.NextConnectorIndex(), 10)},
 		"_")
 
@@ -96,15 +98,12 @@ func (f factory) parsePythonVersion(pythonPath string) (string, error) {
 	if err != nil {
 		return "", exex.CommandError(err, "error getting python version")
 	}
-	re, err := regexp.Compile(`\d+\.\d+\.\d+`)
-	if err != nil {
-		return "", err
-	}
+	re := regexp.MustCompile(`\d+\.\d+\.\d+`)
 	found := re.FindString(string(output))
 	return found, nil
 }
 
-// binaryCheck validates there is a python binary in a valid absolute path
+// binaryCheck validates there is a python binary in a valid absolute path.
 func binaryCheck(pythonPath string) (string, error) {
 	if pythonPath == "" {
 		pythonPath = "python"
